@@ -5,12 +5,12 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"github.com/busy-cloud/boat/cron"
 	"github.com/busy-cloud/boat/db"
 	"github.com/busy-cloud/boat/lib"
 	"github.com/busy-cloud/boat/log"
 	"github.com/busy-cloud/boat/mqtt"
 	"github.com/busy-cloud/iot/types"
-	"github.com/go-co-op/gocron/v2"
 	"github.com/spf13/cast"
 	"go.uber.org/multierr"
 )
@@ -28,7 +28,7 @@ type Device struct {
 
 	master  *Master
 	product *Product
-	jobs    []gocron.Job
+	jobs    []*cron.Job
 }
 
 func (d *Device) Open() error {
@@ -56,14 +56,14 @@ func (d *Device) Open() error {
 
 	//添加计划任务
 	if p.Crontab != "" {
-		job, err := Crontab(p.Crontab, fn)
+		job, err := cron.Crontab(p.Crontab, fn)
 		if err != nil {
 			return err
 		}
 		d.jobs = append(d.jobs, job)
 	}
 	if p.Interval > 0 {
-		job, err := Interval(int64(p.Interval), fn)
+		job, err := cron.Interval(int64(p.Interval), fn)
 		if err != nil {
 			return err
 		}
@@ -78,7 +78,7 @@ func (d *Device) Open() error {
 func (d *Device) Close() error {
 	var err error
 	for _, job := range d.jobs {
-		e := scheduler.RemoveJob(job.ID())
+		e := job.Stop()
 		if e != nil {
 			err = multierr.Append(err, e)
 		}

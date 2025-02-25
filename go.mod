@@ -3,11 +3,12 @@ module github.com/busy-cloud/modbus
 go 1.23.0
 
 require (
-	github.com/busy-cloud/boat v0.0.10
+	github.com/busy-cloud/boat v0.0.12
 	github.com/busy-cloud/iot v0.0.1
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-co-op/gocron/v2 v2.16.0
 	github.com/spf13/cast v1.7.1
+	go.uber.org/multierr v1.11.0
 	xorm.io/xorm v1.3.9
 )
 
@@ -62,7 +63,6 @@ require (
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
-	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.14.0 // indirect
 	golang.org/x/crypto v0.33.0 // indirect
 	golang.org/x/exp v0.0.0-20250215185904-eff6e970281f // indirect
