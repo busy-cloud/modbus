@@ -17,7 +17,7 @@ type Device struct {
 	types.Device `xorm:"extends"`
 	Slave        uint8 `json:"slave,omitempty"` //从站号
 
-	gateway *Gateway
+	gateway *ModbusMaster
 }
 
 func (d *Device) Read(code uint8, offset uint16, length uint16) ([]byte, error) {

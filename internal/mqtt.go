@@ -12,10 +12,7 @@ const protocol = "modbus"
 func Startup() error {
 
 	//订阅数据
-	mqtt.Client.SubscribeMultiple(map[string]byte{
-		protocol + "/+/+/up": 0,
-		protocol + "/+/up":   0,
-	}, func(client paho.Client, message paho.Message) {
+	mqtt.Client.Subscribe(protocol+"/+/+/up", 0, func(client paho.Client, message paho.Message) {
 		ss := strings.Split(message.Topic(), "/")
 		linker := ss[1]
 		incoming := ss[2]
@@ -26,12 +23,19 @@ func Startup() error {
 		}
 		gateway.onData(message.Payload())
 	})
+	mqtt.Client.Subscribe(protocol+"/+/up", 0, func(client paho.Client, message paho.Message) {
+		ss := strings.Split(message.Topic(), "/")
+		linker := ss[1]
+		gateway, err := EnsureGateway(linker, "")
+		if err != nil {
+			log.Error("gateway err:", err)
+			return
+		}
+		gateway.onData(message.Payload())
+	})
 
 	//连接打开，加载设备
-	mqtt.Client.SubscribeMultiple(map[string]byte{
-		protocol + "/+/+/open": 0,
-		protocol + "/+/open":   0,
-	}, func(client paho.Client, message paho.Message) {
+	mqtt.Client.Subscribe(protocol+"/+/+/open", 0, func(client paho.Client, message paho.Message) {
 		ss := strings.Split(message.Topic(), "/")
 		linker := ss[1]
 		incoming := ss[2]
@@ -46,22 +50,37 @@ func Startup() error {
 			log.Println(err)
 		}
 	})
-
-	//关闭连接
-	mqtt.Client.SubscribeMultiple(map[string]byte{
-		protocol + "/+/+/close": 0,
-		protocol + "/+/close":   0,
-	}, func(client paho.Client, message paho.Message) {
+	mqtt.Client.Subscribe(protocol+"/+/open", 0, func(client paho.Client, message paho.Message) {
 		ss := strings.Split(message.Topic(), "/")
 		linker := ss[1]
-		incoming := ss[2]
-		gateway, err := EnsureGateway(linker, incoming)
+		gateway, err := EnsureGateway(linker, "")
 		if err != nil {
 			log.Error("gateway err:", err)
 			return
 		}
+		err = gateway.Open()
+		//log.Println("gateway open", gateway.Id)
+		if err != nil {
+			log.Println(err)
+		}
+	})
+
+	//关闭连接
+	mqtt.Client.Subscribe(protocol+"/+/+/close", 0, func(client paho.Client, message paho.Message) {
+		ss := strings.Split(message.Topic(), "/")
+		linker := ss[1]
+		incoming := ss[2]
+		gateway := GetGateway(linker, incoming)
 		if gateway != nil {
-			//gateway.Close()
+			_ = gateway.Close()
+		}
+	})
+	mqtt.Client.Subscribe(protocol+"/+/close", 0, func(client paho.Client, message paho.Message) {
+		ss := strings.Split(message.Topic(), "/")
+		linker := ss[1]
+		gateway := GetGateway(linker, "")
+		if gateway != nil {
+			_ = gateway.Close()
 		}
 	})
 

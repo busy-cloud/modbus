@@ -10,9 +10,9 @@ import (
 	"time"
 )
 
-var gateways lib.Map[Gateway]
+var gateways lib.Map[ModbusMaster]
 
-type Gateway struct {
+type ModbusMaster struct {
 	Id         string    `json:"id" xorm:"pk"`
 	Name       string    `json:"name,omitempty"`
 	LinkerId   string    `json:"linker_id" xorm:"index"`
@@ -29,13 +29,13 @@ type Gateway struct {
 	wait chan []byte
 }
 
-func (g *Gateway) Write(request []byte) error {
+func (g *ModbusMaster) Write(request []byte) error {
 	tkn := mqtt.Publish("link/"+g.LinkerId+"/"+g.IncomingId+"/down", request)
 	tkn.Wait()
 	return tkn.Error()
 }
 
-func (g *Gateway) Read() ([]byte, error) {
+func (g *ModbusMaster) Read() ([]byte, error) {
 	select {
 	case buf := <-g.wait:
 		return buf, nil
@@ -44,7 +44,7 @@ func (g *Gateway) Read() ([]byte, error) {
 	}
 }
 
-func (g *Gateway) ReadAtLeast(n int) ([]byte, error) {
+func (g *ModbusMaster) ReadAtLeast(n int) ([]byte, error) {
 	var ret []byte
 
 	for len(ret) < n {
@@ -58,11 +58,11 @@ func (g *Gateway) ReadAtLeast(n int) ([]byte, error) {
 	return ret, nil
 }
 
-func (g *Gateway) onData(buf []byte) {
+func (g *ModbusMaster) onData(buf []byte) {
 	g.wait <- buf
 }
 
-func (g *Gateway) Close() error {
+func (g *ModbusMaster) Close() error {
 	if !g.opened {
 		return fmt.Errorf("gateway already closed")
 	}
@@ -70,7 +70,7 @@ func (g *Gateway) Close() error {
 	return nil
 }
 
-func (g *Gateway) Open() error {
+func (g *ModbusMaster) Open() error {
 	if g.opened {
 		return fmt.Errorf("gateway is already opened")
 	}
@@ -87,14 +87,14 @@ func (g *Gateway) Open() error {
 	return nil
 }
 
-func (g *Gateway) polling() {
+func (g *ModbusMaster) polling() {
 	for g.opened {
 		//TODO 轮询
 
 	}
 }
 
-func (g *Gateway) LoadDevice(id string) error {
+func (g *ModbusMaster) LoadDevice(id string) error {
 	var device Device
 	has, err := db.Engine.ID(id).Get(&device)
 	if err != nil {
@@ -107,11 +107,11 @@ func (g *Gateway) LoadDevice(id string) error {
 	return nil
 }
 
-func (g *Gateway) UnLoadDevice(id string) {
+func (g *ModbusMaster) UnLoadDevice(id string) {
 	delete(g.devices, id)
 }
 
-func (g *Gateway) LoadDevices() error {
+func (g *ModbusMaster) LoadDevices() error {
 	//清空
 	g.devices = make(map[string]*Device)
 
@@ -127,12 +127,12 @@ func (g *Gateway) LoadDevices() error {
 	return nil
 }
 
-func (g *Gateway) GetDevice(id string) *Device {
+func (g *ModbusMaster) GetDevice(id string) *Device {
 	return g.devices[id]
 }
 
-func LoadGateway(id string) (*Gateway, error) {
-	var gateway Gateway
+func LoadGateway(id string) (*ModbusMaster, error) {
+	var gateway ModbusMaster
 	has, err := db.Engine.ID(id).Get(&gateway)
 	if err != nil {
 		return nil, err
@@ -158,7 +158,7 @@ func LoadGateway(id string) (*Gateway, error) {
 var ensureLock sync.Mutex
 
 // 自动加载网关
-func EnsureGateway(id string) (gateway *Gateway, err error) {
+func EnsureGateway(id string) (gateway *ModbusMaster, err error) {
 	//此处应该加锁，避免重复创建
 	ensureLock.Lock()
 	defer ensureLock.Unlock()
@@ -175,6 +175,6 @@ func EnsureGateway(id string) (gateway *Gateway, err error) {
 	return
 }
 
-func GetGateway(id string) *Gateway {
+func GetGateway(id string) *ModbusMaster {
 	return gateways.Load(id)
 }
