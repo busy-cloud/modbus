@@ -90,8 +90,11 @@ func (d *Device) Close() error {
 }
 
 func (d *Device) Poll() (map[string]any, error) {
-	if d.product == nil || d.product.pollers == nil {
+	if d.product == nil {
 		return nil, errors.New("product not exist")
+	}
+	if d.product.pollers == nil {
+		return nil, errors.New("pollers not exist")
 	}
 
 	values := map[string]any{}
@@ -201,15 +204,15 @@ func (d *Device) Get(key string) (any, error) {
 
 func (d *Device) Set(key string, value any) error {
 	if d.product == nil {
-		return  errors.New("product not exist")
+		return errors.New("product not exist")
 	}
 	if d.product.mappers == nil {
-		return  errors.New("mappers not exist")
+		return errors.New("mappers not exist")
 	}
 
 	pt, code, addr, _ := d.product.mappers.Lookup(key)
 	if pt == nil {
-		return  errors.New("point not exist")
+		return errors.New("point not exist")
 	}
 
 	buf, err := pt.Encode(value)
@@ -219,12 +222,11 @@ func (d *Device) Set(key string, value any) error {
 
 	err = d.Write(code, addr, buf)
 	if err != nil {
-		return  err
+		return err
 	}
 
 	return nil
 }
-
 
 var devices lib.Map[Device]
 
