@@ -5,38 +5,39 @@ import (
 	"fmt"
 	"github.com/busy-cloud/boat/db"
 	"github.com/busy-cloud/boat/lib"
+	"github.com/busy-cloud/boat/log"
 	"github.com/busy-cloud/iot/types"
 	"xorm.io/xorm/schemas"
 )
 
-type ProductMapper struct {
+type ProductMappers struct {
 	types.ProductConfig `xorm:"extends"`
-	Content             *Mapper `json:"content,omitempty"`
+	Content             *Mappers `json:"content,omitempty"`
 }
 
-func (p *ProductMapper) TableName() string {
+func (p *ProductMappers) TableName() string {
 	return "product_config"
 }
 
-type ProductPoller struct {
+type ProductPollers struct {
 	types.ProductConfig `xorm:"extends"`
-	Content             []*Poller `json:"content,omitempty"`
+	Content             *Pollers `json:"content,omitempty"`
 }
 
-func (p *ProductPoller) TableName() string {
+func (p *ProductPollers) TableName() string {
 	return "product_config"
 }
 
 type Product struct {
 	types.Product
 
-	mapper *Mapper
-	poller []*Poller
+	mappers *Mappers
+	pollers *Pollers
 }
 
 func (p *Product) Load() error {
 
-	var mapper ProductMapper
+	var mapper ProductMappers
 	has, err := db.Engine.ID(schemas.PK{p.Id, "config"}).Get(&mapper)
 	if err != nil {
 		return err
@@ -44,17 +45,18 @@ func (p *Product) Load() error {
 	if !has {
 		return errors.New("缺少映射")
 	}
-	p.mapper = mapper.Content
+	p.mappers = mapper.Content
 
-	var poller ProductPoller
+	var poller ProductPollers
 	has, err = db.Engine.ID(schemas.PK{p.Id, "config"}).Get(&poller)
 	if err != nil {
 		return err
 	}
 	if !has {
-		return errors.New("缺少轮询")
+		log.Info(p.Id, "缺少轮询")
+		//return errors.New("缺少轮询")
 	}
-	p.poller = poller.Content
+	p.pollers = poller.Content
 
 	return nil
 }

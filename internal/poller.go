@@ -1,17 +1,26 @@
 package internal
 
-import "github.com/busy-cloud/boat/log"
+import (
+	"github.com/busy-cloud/boat/log"
+)
 
-type Poller struct {
-	Code    uint8  `json:"code"`
-	Address uint16 `json:"address"`
-	Length  uint16 `json:"length"` //长度
+type Pollers struct {
+	Crontab  string    `json:"crontab,omitempty"`  //定时读取
+	Interval uint      `json:"interval,omitempty"` //轮询间隔
+	Timeout  uint      `json:"timeout,omitempty"`  //读取超时
+	Pollers  []*Poller `json:"pollers"`            //轮询表
 }
 
-func (p *Poller) Parse(mapper *Mapper, buf []byte, values map[string]any) error {
+type Poller struct {
+	Code    uint8  `json:"code"`    //功能码 1 2 3 4
+	Address uint16 `json:"address"` //地址
+	Length  uint16 `json:"length"`  //长度
+}
+
+func (p *Poller) Parse(mappers *Mappers, buf []byte, values map[string]any) error {
 	switch p.Code {
 	case 1:
-		for _, m := range mapper.Coils {
+		for _, m := range mappers.Coils {
 			if p.Address <= m.Address && p.Length > m.Address-p.Address {
 				ret, err := m.Parse(p.Address, buf)
 				if err != nil {
@@ -22,7 +31,7 @@ func (p *Poller) Parse(mapper *Mapper, buf []byte, values map[string]any) error 
 			}
 		}
 	case 2:
-		for _, m := range mapper.DiscreteInputs {
+		for _, m := range mappers.DiscreteInputs {
 			if p.Address <= m.Address && p.Length > m.Address-p.Address {
 				ret, err := m.Parse(p.Address, buf)
 				if err != nil {
@@ -33,7 +42,7 @@ func (p *Poller) Parse(mapper *Mapper, buf []byte, values map[string]any) error 
 			}
 		}
 	case 3:
-		for _, m := range mapper.HoldingRegisters {
+		for _, m := range mappers.HoldingRegisters {
 			if p.Address <= m.Address && p.Length > m.Address-p.Address {
 				ret, err := m.Parse(p.Address, buf)
 				if err != nil {
@@ -51,7 +60,7 @@ func (p *Poller) Parse(mapper *Mapper, buf []byte, values map[string]any) error 
 			}
 		}
 	case 4:
-		for _, m := range mapper.HoldingRegisters {
+		for _, m := range mappers.HoldingRegisters {
 			if p.Address <= m.Address && p.Length > m.Address-p.Address {
 				ret, err := m.Parse(p.Address, buf)
 				if err != nil {

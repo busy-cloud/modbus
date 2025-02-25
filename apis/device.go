@@ -4,6 +4,7 @@ import (
 	"github.com/busy-cloud/boat/api"
 	"github.com/busy-cloud/boat/curd"
 	"github.com/busy-cloud/modbus/internal"
+	"github.com/gin-gonic/gin"
 )
 
 func init() {
@@ -16,4 +17,21 @@ func init() {
 	api.Register("GET", "modbus/device/:id/delete", curd.ParseParamStringId, curd.ApiDelete[internal.Device]())
 	api.Register("GET", "modbus/device/:id/enable", curd.ParseParamStringId, curd.ApiDisable[internal.Device](false))
 	api.Register("GET", "modbus/device/:id/disable", curd.ParseParamStringId, curd.ApiDisable[internal.Device](true))
+	api.Register("GET", "modbus/device/:id/poll", curd.ParseParamStringId, devicePoll)
+}
+
+func devicePoll(ctx *gin.Context) {
+	d := internal.GetDevice(ctx.Param("id"))
+	if d == nil {
+		api.Fail(ctx, "device not found")
+		return
+	}
+
+	values, err := d.Poll()
+	if err != nil {
+		api.Error(ctx, err)
+		return
+	}
+
+	api.OK(ctx, values)
 }

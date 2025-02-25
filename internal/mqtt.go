@@ -10,6 +10,8 @@ const protocol = "modbus"
 
 func Startup() error {
 
+	scheduler.Start()
+
 	//订阅数据
 	mqtt.Subscribe(protocol+"/+/+/up", func(topic string, payload []byte) {
 		ss := strings.Split(topic, "/")

@@ -1,13 +1,13 @@
 package internal
 
-type Mapper struct {
+type Mappers struct {
 	Coils            []*PointBit  `json:"coils,omitempty"`
 	DiscreteInputs   []*PointBit  `json:"discrete_inputs,omitempty"`
 	HoldingRegisters []*PointWord `json:"holding_registers,omitempty"`
 	InputRegisters   []*PointWord `json:"input_registers,omitempty"`
 }
 
-func (p *Mapper) Lookup(name string) (pt Point, code uint8, address uint16) {
+func (p *Mappers) Lookup(name string) (pt Point, code uint8, address uint16) {
 	for _, m := range p.Coils {
 		if m.Name == name {
 			return m, 1, m.Address

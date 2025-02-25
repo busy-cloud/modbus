@@ -62,6 +62,13 @@ func (g *Master) Close() error {
 		return fmt.Errorf("master already closed")
 	}
 	g.opened = false
+
+	for _, device := range g.devices {
+		_ = device.Close()
+	}
+	g.devices = nil
+	close(g.wait)
+
 	return nil
 }
 
@@ -70,6 +77,8 @@ func (g *Master) Open() error {
 		return fmt.Errorf("master is already opened")
 	}
 
+	g.wait = make(chan []byte)
+
 	err := g.LoadDevices()
 	if err != nil {
 		return err
@@ -77,16 +86,7 @@ func (g *Master) Open() error {
 
 	g.opened = true
 
-	go g.polling()
-
 	return nil
-}
-
-func (g *Master) polling() {
-	for g.opened {
-		//TODO 轮询
-
-	}
 }
 
 func (g *Master) LoadDevice(id string) error {
@@ -103,7 +103,10 @@ func (g *Master) LoadDevice(id string) error {
 }
 
 func (g *Master) UnLoadDevice(id string) {
-	delete(g.devices, id)
+	if d, ok := g.devices[id]; ok {
+		_ = d.Close()
+		delete(g.devices, id)
+	}
 }
 
 func (g *Master) LoadDevices() error {
@@ -121,6 +124,10 @@ func (g *Master) LoadDevices() error {
 		device.product, err = EnsureProduct(device.ProductId)
 		if err != nil {
 			log.Printf("failed to ensure product: %v", err)
+		}
+		err = device.Open()
+		if err != nil {
+			log.Printf("failed to open device: %v", err)
 		}
 	}
 	return nil
@@ -140,10 +147,15 @@ func EnsureMaster(linker, incoming string) (master *Master, err error) {
 		master = &Master{
 			LinkerId:   linker,
 			IncomingId: incoming,
-			wait:       make(chan []byte),
+			//wait:       make(chan []byte),
 		}
 
 		masters.Store(id, master)
+
+		err = master.Open()
+		//if err != nil {
+		//	return nil, err
+		//}
 	}
 	return
 }
