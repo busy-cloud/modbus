@@ -24,26 +24,26 @@ type Master struct {
 	wait chan []byte
 }
 
-func (g *Master) Write(request []byte) error {
-	tkn := mqtt.Publish("link/"+g.LinkerId+"/"+g.IncomingId+"/down", request)
+func (m *Master) Write(request []byte) error {
+	tkn := mqtt.Publish("link/"+m.LinkerId+"/"+m.IncomingId+"/down", request)
 	tkn.Wait()
 	return tkn.Error()
 }
 
-func (g *Master) Read() ([]byte, error) {
+func (m *Master) Read() ([]byte, error) {
 	select {
-	case buf := <-g.wait:
+	case buf := <-m.wait:
 		return buf, nil
 	case <-time.After(time.Second * 5):
 		return nil, errors.New("timeout")
 	}
 }
 
-func (g *Master) ReadAtLeast(n int) ([]byte, error) {
+func (m *Master) ReadAtLeast(n int) ([]byte, error) {
 	var ret []byte
 
 	for len(ret) < n {
-		buf, err := g.Read()
+		buf, err := m.Read()
 		if err != nil {
 			return nil, err
 		}
@@ -53,43 +53,43 @@ func (g *Master) ReadAtLeast(n int) ([]byte, error) {
 	return ret, nil
 }
 
-func (g *Master) onData(buf []byte) {
-	g.wait <- buf
+func (m *Master) onData(buf []byte) {
+	m.wait <- buf
 }
 
-func (g *Master) Close() error {
-	if !g.opened {
+func (m *Master) Close() error {
+	if !m.opened {
 		return fmt.Errorf("master already closed")
 	}
-	g.opened = false
+	m.opened = false
 
-	for _, device := range g.devices {
+	for _, device := range m.devices {
 		_ = device.Close()
 	}
-	g.devices = nil
-	close(g.wait)
+	m.devices = nil
+	close(m.wait)
 
 	return nil
 }
 
-func (g *Master) Open() error {
-	if g.opened {
+func (m *Master) Open() error {
+	if m.opened {
 		return fmt.Errorf("master is already opened")
 	}
 
-	g.wait = make(chan []byte)
+	m.wait = make(chan []byte)
 
-	err := g.LoadDevices()
+	err := m.LoadDevices()
 	if err != nil {
 		return err
 	}
 
-	g.opened = true
+	m.opened = true
 
 	return nil
 }
 
-func (g *Master) LoadDevice(id string) error {
+func (m *Master) LoadDevice(id string) error {
 	var device Device
 	has, err := db.Engine.ID(id).Get(&device)
 	if err != nil {
@@ -98,29 +98,38 @@ func (g *Master) LoadDevice(id string) error {
 	if !has {
 		return fmt.Errorf("device %s not found", id)
 	}
-	g.devices[id] = &device
+	m.devices[id] = &device
+	device.master = m
+	device.product, err = EnsureProduct(device.ProductId)
+	if err != nil {
+		log.Printf("failed to ensure product: %v", err)
+	}
+	err = device.Open()
+	if err != nil {
+		log.Printf("failed to open device: %v", err)
+	}
 	return nil
 }
 
-func (g *Master) UnLoadDevice(id string) {
-	if d, ok := g.devices[id]; ok {
+func (m *Master) UnLoadDevice(id string) {
+	if d, ok := m.devices[id]; ok {
 		_ = d.Close()
-		delete(g.devices, id)
+		delete(m.devices, id)
 	}
 }
 
-func (g *Master) LoadDevices() error {
+func (m *Master) LoadDevices() error {
 	//清空
-	g.devices = make(map[string]*Device)
+	m.devices = make(map[string]*Device)
 
 	var devices []*Device
-	err := db.Engine.Where("linker_id=?", g.LinkerId).And("incoming_id=?", g.IncomingId).Find(&devices)
+	err := db.Engine.Where("linker_id=?", m.LinkerId).And("incoming_id=?", m.IncomingId).Find(&devices)
 	if err != nil {
 		return err
 	}
 	for _, device := range devices {
-		g.devices[device.Id] = device
-		device.master = g
+		m.devices[device.Id] = device
+		device.master = m
 		device.product, err = EnsureProduct(device.ProductId)
 		if err != nil {
 			log.Printf("failed to ensure product: %v", err)
@@ -133,8 +142,8 @@ func (g *Master) LoadDevices() error {
 	return nil
 }
 
-func (g *Master) GetDevice(id string) *Device {
-	return g.devices[id]
+func (m *Master) GetDevice(id string) *Device {
+	return m.devices[id]
 }
 
 // 自动加载网关
