@@ -178,6 +178,54 @@ func (d *Device) Write(code uint8, offset uint16, value any) error {
 	return err
 }
 
+func (d *Device) Get(key string) (any, error) {
+	if d.product == nil {
+		return nil, errors.New("product not exist")
+	}
+	if d.product.mappers == nil {
+		return nil, errors.New("mappers not exist")
+	}
+
+	pt, code, addr, size := d.product.mappers.Lookup(key)
+	if pt == nil {
+		return nil, errors.New("point not exist")
+	}
+
+	buf, err := d.Read(code, addr, size)
+	if err != nil {
+		return nil, err
+	}
+
+	return pt.Parse(0, buf)
+}
+
+func (d *Device) Set(key string, value any) error {
+	if d.product == nil {
+		return  errors.New("product not exist")
+	}
+	if d.product.mappers == nil {
+		return  errors.New("mappers not exist")
+	}
+
+	pt, code, addr, _ := d.product.mappers.Lookup(key)
+	if pt == nil {
+		return  errors.New("point not exist")
+	}
+
+	buf, err := pt.Encode(value)
+	if err != nil {
+		return err
+	}
+
+	err = d.Write(code, addr, buf)
+	if err != nil {
+		return  err
+	}
+
+	return nil
+}
+
+
 var devices lib.Map[Device]
 
 func GetDevice(id string) *Device {

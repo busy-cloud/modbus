@@ -221,3 +221,22 @@ func (p *PointWord) Parse(address uint16, buf []byte) (any, error) {
 
 	return ret, nil
 }
+
+func (p *PointWord) Size() int {
+	switch p.Type {
+	case "short", "int16":
+		return 1
+	case "word", "uint16":
+		return 1
+	case "int32", "int":
+		return 2
+	case "qword", "uint32", "uint":
+		return 2
+	case "float", "float32":
+		return 2
+	case "double", "float64":
+		return 4
+	default:
+		return 1
+	}
+}
