@@ -5,21 +5,16 @@ import (
 	"fmt"
 	"github.com/busy-cloud/boat/db"
 	"github.com/busy-cloud/boat/lib"
+	"github.com/busy-cloud/boat/log"
 	"github.com/busy-cloud/boat/mqtt"
-	"sync"
 	"time"
 )
 
-var gateways lib.Map[ModbusMaster]
+var masters lib.Map[Master]
 
-type ModbusMaster struct {
-	Id         string    `json:"id" xorm:"pk"`
-	Name       string    `json:"name,omitempty"`
-	LinkerId   string    `json:"linker_id" xorm:"index"`
-	IncomingId string    `json:"incoming_id" xorm:"index"`
-	Timeout    int64     `json:"timeout"` //超时
-	Disabled   bool      `json:"disabled,omitempty"`
-	Created    time.Time `json:"created,omitempty" xorm:"created"`
+type Master struct {
+	LinkerId   string `json:"linker_id" xorm:"index"`
+	IncomingId string `json:"incoming_id" xorm:"index"`
 
 	//packets chan *Packet
 	devices map[string]*Device
@@ -29,22 +24,22 @@ type ModbusMaster struct {
 	wait chan []byte
 }
 
-func (g *ModbusMaster) Write(request []byte) error {
+func (g *Master) Write(request []byte) error {
 	tkn := mqtt.Publish("link/"+g.LinkerId+"/"+g.IncomingId+"/down", request)
 	tkn.Wait()
 	return tkn.Error()
 }
 
-func (g *ModbusMaster) Read() ([]byte, error) {
+func (g *Master) Read() ([]byte, error) {
 	select {
 	case buf := <-g.wait:
 		return buf, nil
-	case <-time.After(time.Second * time.Duration(g.Timeout)):
+	case <-time.After(time.Second * 5):
 		return nil, errors.New("timeout")
 	}
 }
 
-func (g *ModbusMaster) ReadAtLeast(n int) ([]byte, error) {
+func (g *Master) ReadAtLeast(n int) ([]byte, error) {
 	var ret []byte
 
 	for len(ret) < n {
@@ -58,21 +53,21 @@ func (g *ModbusMaster) ReadAtLeast(n int) ([]byte, error) {
 	return ret, nil
 }
 
-func (g *ModbusMaster) onData(buf []byte) {
+func (g *Master) onData(buf []byte) {
 	g.wait <- buf
 }
 
-func (g *ModbusMaster) Close() error {
+func (g *Master) Close() error {
 	if !g.opened {
-		return fmt.Errorf("gateway already closed")
+		return fmt.Errorf("master already closed")
 	}
 	g.opened = false
 	return nil
 }
 
-func (g *ModbusMaster) Open() error {
+func (g *Master) Open() error {
 	if g.opened {
-		return fmt.Errorf("gateway is already opened")
+		return fmt.Errorf("master is already opened")
 	}
 
 	err := g.LoadDevices()
@@ -87,14 +82,14 @@ func (g *ModbusMaster) Open() error {
 	return nil
 }
 
-func (g *ModbusMaster) polling() {
+func (g *Master) polling() {
 	for g.opened {
 		//TODO 轮询
 
 	}
 }
 
-func (g *ModbusMaster) LoadDevice(id string) error {
+func (g *Master) LoadDevice(id string) error {
 	var device Device
 	has, err := db.Engine.ID(id).Get(&device)
 	if err != nil {
@@ -107,74 +102,53 @@ func (g *ModbusMaster) LoadDevice(id string) error {
 	return nil
 }
 
-func (g *ModbusMaster) UnLoadDevice(id string) {
+func (g *Master) UnLoadDevice(id string) {
 	delete(g.devices, id)
 }
 
-func (g *ModbusMaster) LoadDevices() error {
+func (g *Master) LoadDevices() error {
 	//清空
 	g.devices = make(map[string]*Device)
 
 	var devices []*Device
-	err := db.Engine.Where("gateway_id=?", g.Id).Find(&devices)
+	err := db.Engine.Where("linker_id=?", g.LinkerId).And("incoming_id=?", g.IncomingId).Find(&devices)
 	if err != nil {
 		return err
 	}
 	for _, device := range devices {
 		g.devices[device.Id] = device
-		device.gateway = g
+		device.master = g
+		device.product, err = EnsureProduct(device.ProductId)
+		if err != nil {
+			log.Printf("failed to ensure product: %v", err)
+		}
 	}
 	return nil
 }
 
-func (g *ModbusMaster) GetDevice(id string) *Device {
+func (g *Master) GetDevice(id string) *Device {
 	return g.devices[id]
 }
 
-func LoadGateway(id string) (*ModbusMaster, error) {
-	var gateway ModbusMaster
-	has, err := db.Engine.ID(id).Get(&gateway)
-	if err != nil {
-		return nil, err
-	}
-	//数据库里查不到，则创建
-	if !has {
-		gateway.Id = id
-		_, err := db.Engine.Insert(&gateway)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	//加载，即打开
-	//err = gateway.Open()
-	//if err != nil {
-	//	return nil, err
-	//}
-
-	return &gateway, nil
-}
-
-var ensureLock sync.Mutex
-
 // 自动加载网关
-func EnsureGateway(id string) (gateway *ModbusMaster, err error) {
+func EnsureMaster(linker, incoming string) (master *Master, err error) {
 	//此处应该加锁，避免重复创建
-	ensureLock.Lock()
-	defer ensureLock.Unlock()
 
-	gateway = gateways.Load(id)
-	if gateway == nil {
-		gateway, err = LoadGateway(id)
-		if err != nil {
-			return nil, err
+	id := linker + "/" + incoming
+	master = masters.Load(id)
+	if master == nil {
+		master = &Master{
+			LinkerId:   linker,
+			IncomingId: incoming,
+			wait:       make(chan []byte),
 		}
 
-		gateways.Store(id, gateway)
+		masters.Store(id, master)
 	}
 	return
 }
 
-func GetGateway(id string) *ModbusMaster {
-	return gateways.Load(id)
+func GetMaster(linker, incoming string) *Master {
+	id := linker + "/" + incoming
+	return masters.Load(id)
 }

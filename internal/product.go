@@ -2,7 +2,9 @@ package internal
 
 import (
 	"errors"
+	"fmt"
 	"github.com/busy-cloud/boat/db"
+	"github.com/busy-cloud/boat/lib"
 	"github.com/busy-cloud/iot/types"
 	"xorm.io/xorm/schemas"
 )
@@ -55,4 +57,32 @@ func (p *Product) Load() error {
 	p.poller = poller.Content
 
 	return nil
+}
+
+var products lib.Map[Product]
+
+func LoadProduct(id string) (*Product, error) {
+	var product Product
+	has, err := db.Engine.ID(id).Get(&product.Product)
+	if err != nil {
+		return nil, err
+	}
+	if !has {
+		return nil, fmt.Errorf("product %s not found", id)
+	}
+	err = product.Load()
+	if err != nil {
+		return nil, err
+	}
+	products.Store(id, &product)
+
+	return &product, nil
+}
+
+func EnsureProduct(id string) (*Product, error) {
+	prod := products.Load(id)
+	if prod != nil {
+		return prod, nil
+	}
+	return LoadProduct(id)
 }

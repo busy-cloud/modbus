@@ -15,9 +15,13 @@ func init() {
 
 type Device struct {
 	types.Device `xorm:"extends"`
-	Slave        uint8 `json:"slave,omitempty"` //从站号
 
-	gateway *ModbusMaster
+	LinkerId   string `json:"linker_id,omitempty" xorm:"index"`   //连接器
+	IncomingId string `json:"incoming_id,omitempty" xorm:"index"` //tcp服务器接入
+	Slave      uint8  `json:"slave,omitempty"`                    //从站号
+
+	master  *Master
+	product *Product
 }
 
 func (d *Device) Read(code uint8, offset uint16, length uint16) ([]byte, error) {
@@ -29,12 +33,12 @@ func (d *Device) Read(code uint8, offset uint16, length uint16) ([]byte, error) 
 	_ = binary.Write(buf, binary.LittleEndian, CRC16(buf.Bytes()))
 
 	//发送
-	err := d.gateway.Write(buf.Bytes())
+	err := d.master.Write(buf.Bytes())
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := d.gateway.ReadAtLeast(7)
+	res, err := d.master.ReadAtLeast(7)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +47,7 @@ func (d *Device) Read(code uint8, offset uint16, length uint16) ([]byte, error) 
 	ln := 5 + cnt
 	//长度不够，继续读
 	for len(res) < ln {
-		b, e := d.gateway.ReadAtLeast(ln - len(res))
+		b, e := d.master.ReadAtLeast(ln - len(res))
 		if e != nil {
 			return nil, e
 		}
@@ -78,12 +82,12 @@ func (d *Device) Write(code uint8, offset uint16, value any) error {
 	_ = binary.Write(buf, binary.LittleEndian, CRC16(buf.Bytes()))
 
 	//发送
-	err := d.gateway.Write(buf.Bytes())
+	err := d.master.Write(buf.Bytes())
 	if err != nil {
 		return err
 	}
 
-	_, err = d.gateway.ReadAtLeast(buf.Len()) //写数据时，返回数据一样，长度也一样
+	_, err = d.master.ReadAtLeast(buf.Len()) //写数据时，返回数据一样，长度也一样
 
 	return err
 }

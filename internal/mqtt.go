@@ -3,7 +3,6 @@ package internal
 import (
 	"github.com/busy-cloud/boat/log"
 	"github.com/busy-cloud/boat/mqtt"
-	paho "github.com/eclipse/paho.mqtt.golang"
 	"strings"
 )
 
@@ -12,34 +11,34 @@ const protocol = "modbus"
 func Startup() error {
 
 	//订阅数据
-	mqtt.Client.Subscribe(protocol+"/+/+/up", 0, func(client paho.Client, message paho.Message) {
-		ss := strings.Split(message.Topic(), "/")
+	mqtt.Subscribe(protocol+"/+/+/up", func(topic string, payload []byte) {
+		ss := strings.Split(topic, "/")
 		linker := ss[1]
 		incoming := ss[2]
-		gateway, err := EnsureGateway(linker, incoming)
+		gateway, err := EnsureMaster(linker, incoming)
 		if err != nil {
 			log.Error("gateway err:", err)
 			return
 		}
-		gateway.onData(message.Payload())
+		gateway.onData(payload)
 	})
-	mqtt.Client.Subscribe(protocol+"/+/up", 0, func(client paho.Client, message paho.Message) {
-		ss := strings.Split(message.Topic(), "/")
+	mqtt.Subscribe(protocol+"/+/up", func(topic string, payload []byte) {
+		ss := strings.Split(topic, "/")
 		linker := ss[1]
-		gateway, err := EnsureGateway(linker, "")
+		gateway, err := EnsureMaster(linker, "")
 		if err != nil {
 			log.Error("gateway err:", err)
 			return
 		}
-		gateway.onData(message.Payload())
+		gateway.onData(payload)
 	})
 
 	//连接打开，加载设备
-	mqtt.Client.Subscribe(protocol+"/+/+/open", 0, func(client paho.Client, message paho.Message) {
-		ss := strings.Split(message.Topic(), "/")
+	mqtt.Subscribe(protocol+"/+/+/open", func(topic string, payload []byte) {
+		ss := strings.Split(topic, "/")
 		linker := ss[1]
 		incoming := ss[2]
-		gateway, err := EnsureGateway(linker, incoming)
+		gateway, err := EnsureMaster(linker, incoming)
 		if err != nil {
 			log.Error("gateway err:", err)
 			return
@@ -50,10 +49,10 @@ func Startup() error {
 			log.Println(err)
 		}
 	})
-	mqtt.Client.Subscribe(protocol+"/+/open", 0, func(client paho.Client, message paho.Message) {
-		ss := strings.Split(message.Topic(), "/")
+	mqtt.Subscribe(protocol+"/+/open", func(topic string, payload []byte) {
+		ss := strings.Split(topic, "/")
 		linker := ss[1]
-		gateway, err := EnsureGateway(linker, "")
+		gateway, err := EnsureMaster(linker, "")
 		if err != nil {
 			log.Error("gateway err:", err)
 			return
@@ -66,19 +65,19 @@ func Startup() error {
 	})
 
 	//关闭连接
-	mqtt.Client.Subscribe(protocol+"/+/+/close", 0, func(client paho.Client, message paho.Message) {
-		ss := strings.Split(message.Topic(), "/")
+	mqtt.Subscribe(protocol+"/+/+/close", func(topic string, payload []byte) {
+		ss := strings.Split(topic, "/")
 		linker := ss[1]
 		incoming := ss[2]
-		gateway := GetGateway(linker, incoming)
+		gateway := GetMaster(linker, incoming)
 		if gateway != nil {
 			_ = gateway.Close()
 		}
 	})
-	mqtt.Client.Subscribe(protocol+"/+/close", 0, func(client paho.Client, message paho.Message) {
-		ss := strings.Split(message.Topic(), "/")
+	mqtt.Subscribe(protocol+"/+/close", func(topic string, payload []byte) {
+		ss := strings.Split(topic, "/")
 		linker := ss[1]
-		gateway := GetGateway(linker, "")
+		gateway := GetMaster(linker, "")
 		if gateway != nil {
 			_ = gateway.Close()
 		}
@@ -89,7 +88,7 @@ func Startup() error {
 	//	ss := strings.Split(topic, "/")
 	//	id := ss[2]
 	//	id2 := ss[4]
-	//	gateway := GetGateway(id)
+	//	gateway := GetMaster(id)
 	//	if gateway != nil {
 	//		err := gateway.LoadDevice(id2)
 	//		if err != nil {
@@ -103,7 +102,7 @@ func Startup() error {
 	//	ss := strings.Split(topic, "/")
 	//	id := ss[2]
 	//	id2 := ss[4]
-	//	gateway := GetGateway(id)
+	//	gateway := GetMaster(id)
 	//	if gateway != nil {
 	//		gateway.UnLoadDevice(id2)
 	//	}
