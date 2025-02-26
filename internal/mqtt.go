@@ -9,28 +9,28 @@ import (
 const protocol = "modbus"
 
 func Startup() error {
-	
+
 	//订阅数据
 	mqtt.Subscribe(protocol+"/+/+/up", func(topic string, payload []byte) {
 		ss := strings.Split(topic, "/")
 		linker := ss[1]
 		incoming := ss[2]
-		gateway, err := EnsureMaster(linker, incoming)
+		master, err := EnsureMaster(linker, incoming)
 		if err != nil {
-			log.Error("gateway err:", err)
+			log.Error("master err:", err)
 			return
 		}
-		gateway.onData(payload)
+		master.onData(payload)
 	})
 	mqtt.Subscribe(protocol+"/+/up", func(topic string, payload []byte) {
 		ss := strings.Split(topic, "/")
 		linker := ss[1]
-		gateway, err := EnsureMaster(linker, "")
+		master, err := EnsureMaster(linker, "")
 		if err != nil {
-			log.Error("gateway err:", err)
+			log.Error("master err:", err)
 			return
 		}
-		gateway.onData(payload)
+		master.onData(payload)
 	})
 
 	//连接打开，加载设备
@@ -38,13 +38,13 @@ func Startup() error {
 		ss := strings.Split(topic, "/")
 		linker := ss[1]
 		incoming := ss[2]
-		gateway, err := EnsureMaster(linker, incoming)
+		master, err := EnsureMaster(linker, incoming)
 		if err != nil {
-			log.Error("gateway err:", err)
+			log.Error("master err:", err)
 			return
 		}
-		err = gateway.Open()
-		//log.Println("gateway open", gateway.Id)
+		err = master.Open()
+		//log.Println("master open", master.Id)
 		if err != nil {
 			log.Println(err)
 		}
@@ -52,13 +52,13 @@ func Startup() error {
 	mqtt.Subscribe(protocol+"/+/open", func(topic string, payload []byte) {
 		ss := strings.Split(topic, "/")
 		linker := ss[1]
-		gateway, err := EnsureMaster(linker, "")
+		master, err := EnsureMaster(linker, "")
 		if err != nil {
-			log.Error("gateway err:", err)
+			log.Error("master err:", err)
 			return
 		}
-		err = gateway.Open()
-		//log.Println("gateway open", gateway.Id)
+		err = master.Open()
+		//log.Println("master open", master.Id)
 		if err != nil {
 			log.Println(err)
 		}
@@ -69,17 +69,17 @@ func Startup() error {
 		ss := strings.Split(topic, "/")
 		linker := ss[1]
 		incoming := ss[2]
-		gateway := GetMaster(linker, incoming)
-		if gateway != nil {
-			_ = gateway.Close()
+		master := GetMasterLinkerAndIncoming(linker, incoming)
+		if master != nil {
+			_ = master.Close()
 		}
 	})
 	mqtt.Subscribe(protocol+"/+/close", func(topic string, payload []byte) {
 		ss := strings.Split(topic, "/")
 		linker := ss[1]
-		gateway := GetMaster(linker, "")
-		if gateway != nil {
-			_ = gateway.Close()
+		master := GetMasterLinkerAndIncoming(linker, "")
+		if master != nil {
+			_ = master.Close()
 		}
 	})
 
@@ -88,11 +88,11 @@ func Startup() error {
 	//	ss := strings.Split(topic, "/")
 	//	id := ss[2]
 	//	id2 := ss[4]
-	//	gateway := GetMaster(id)
-	//	if gateway != nil {
-	//		err := gateway.LoadDevice(id2)
+	//	master := GetMaster(id)
+	//	if master != nil {
+	//		err := master.LoadDevice(id2)
 	//		if err != nil {
-	//			log.Error("gateway err:", err)
+	//			log.Error("master err:", err)
 	//		}
 	//	}
 	//})
@@ -102,9 +102,9 @@ func Startup() error {
 	//	ss := strings.Split(topic, "/")
 	//	id := ss[2]
 	//	id2 := ss[4]
-	//	gateway := GetMaster(id)
-	//	if gateway != nil {
-	//		gateway.UnLoadDevice(id2)
+	//	master := GetMaster(id)
+	//	if master != nil {
+	//		master.UnLoadDevice(id2)
 	//	}
 	//})
 

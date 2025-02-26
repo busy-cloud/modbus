@@ -6,7 +6,6 @@ require (
 	github.com/busy-cloud/boat v0.0.12
 	github.com/busy-cloud/iot v0.0.1
 	github.com/gin-gonic/gin v1.10.0
-	github.com/go-co-op/gocron/v2 v2.16.0
 	github.com/spf13/cast v1.7.1
 	go.uber.org/multierr v1.11.0
 	xorm.io/xorm v1.3.9
@@ -24,6 +23,7 @@ require (
 	github.com/gin-contrib/gzip v1.2.2 // indirect
 	github.com/gin-contrib/sessions v1.0.2 // indirect
 	github.com/gin-contrib/sse v1.0.0 // indirect
+	github.com/go-co-op/gocron/v2 v2.16.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.25.0 // indirect

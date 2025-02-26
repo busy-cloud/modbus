@@ -6,18 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/busy-cloud/boat/cron"
-	"github.com/busy-cloud/boat/db"
-	"github.com/busy-cloud/boat/lib"
 	"github.com/busy-cloud/boat/log"
 	"github.com/busy-cloud/boat/mqtt"
 	"github.com/busy-cloud/iot/types"
 	"github.com/spf13/cast"
 	"go.uber.org/multierr"
 )
-
-func init() {
-	db.Register(&Device{})
-}
 
 type Device struct {
 	types.Device `xorm:"extends"`
@@ -26,7 +20,7 @@ type Device struct {
 	IncomingId string `json:"incoming_id,omitempty" xorm:"index"` //tcp服务器接入
 	Slave      uint8  `json:"slave,omitempty"`                    //从站号
 
-	master  *Master
+	master  *ModbusMaster
 	product *Product
 	jobs    []*cron.Job
 }
@@ -216,10 +210,4 @@ func (d *Device) Set(key string, value any) error {
 	}
 
 	return nil
-}
-
-var devices lib.Map[Device]
-
-func GetDevice(id string) *Device {
-	return devices.Load(id)
 }

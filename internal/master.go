@@ -4,18 +4,28 @@ import (
 	"errors"
 	"fmt"
 	"github.com/busy-cloud/boat/db"
-	"github.com/busy-cloud/boat/lib"
 	"github.com/busy-cloud/boat/log"
 	"github.com/busy-cloud/boat/mqtt"
+	"github.com/busy-cloud/boat/pool"
 	"sync"
 	"time"
 )
 
-var masters lib.Map[Master]
-
 type Master struct {
-	LinkerId   string `json:"linker_id" xorm:"index"`
-	IncomingId string `json:"incoming_id" xorm:"index"`
+	Id              string    `json:"id,omitempty" xorm:"pk"`
+	Name            string    `json:"name,omitempty"`
+	Description     string    `json:"description,omitempty"`
+	LinkerId        string    `json:"linker_id" xorm:"index"`
+	IncomingId      string    `json:"incoming_id" xorm:"index"`
+	Polling         bool      `json:"polling,omitempty"`          //开启轮询
+	PollingInterval uint      `json:"polling_interval,omitempty"` //轮询间隔(s)
+	Disabled        bool      `json:"disabled,omitempty"`         //禁用
+	Created         time.Time `json:"created,omitempty" xorm:"created"`
+}
+
+// ModbusMaster modbus主站
+type ModbusMaster struct {
+	Master `xorm:"extends"`
 
 	//packets chan *Packet
 	devices map[string]*Device
@@ -26,13 +36,17 @@ type Master struct {
 	lock sync.Mutex
 }
 
-func (m *Master) Write(request []byte) error {
+func (m *ModbusMaster) LinkerAndIncomingID() string {
+	return m.LinkerId + "_" + m.IncomingId
+}
+
+func (m *ModbusMaster) Write(request []byte) error {
 	tkn := mqtt.Publish("link/"+m.LinkerId+"/"+m.IncomingId+"/down", request)
 	tkn.Wait()
 	return tkn.Error()
 }
 
-func (m *Master) Read() ([]byte, error) {
+func (m *ModbusMaster) Read() ([]byte, error) {
 	select {
 	case buf := <-m.wait:
 		return buf, nil
@@ -41,7 +55,7 @@ func (m *Master) Read() ([]byte, error) {
 	}
 }
 
-func (m *Master) ReadAtLeast(n int) ([]byte, error) {
+func (m *ModbusMaster) ReadAtLeast(n int) ([]byte, error) {
 	var ret []byte
 
 	for len(ret) < n {
@@ -55,7 +69,7 @@ func (m *Master) ReadAtLeast(n int) ([]byte, error) {
 	return ret, nil
 }
 
-func (m *Master) Ask(request []byte, n int) ([]byte, error) {
+func (m *ModbusMaster) Ask(request []byte, n int) ([]byte, error) {
 	//加锁，避免重入（同一连接下，线程均等待，回头可以改成队列）
 	m.lock.Lock()
 	defer m.lock.Unlock()
@@ -86,11 +100,11 @@ func (m *Master) Ask(request []byte, n int) ([]byte, error) {
 	return ret, nil
 }
 
-func (m *Master) onData(buf []byte) {
+func (m *ModbusMaster) onData(buf []byte) {
 	m.wait <- buf
 }
 
-func (m *Master) Close() error {
+func (m *ModbusMaster) Close() error {
 	if !m.opened {
 		return fmt.Errorf("master already closed")
 	}
@@ -105,7 +119,7 @@ func (m *Master) Close() error {
 	return nil
 }
 
-func (m *Master) Open() error {
+func (m *ModbusMaster) Open() error {
 	if m.opened {
 		return fmt.Errorf("master is already opened")
 	}
@@ -119,10 +133,14 @@ func (m *Master) Open() error {
 
 	m.opened = true
 
+	if m.Polling {
+		go m.polling()
+	}
+
 	return nil
 }
 
-func (m *Master) LoadDevice(id string) error {
+func (m *ModbusMaster) LoadDevice(id string) error {
 	var device Device
 	has, err := db.Engine.ID(id).Get(&device)
 	if err != nil {
@@ -144,14 +162,14 @@ func (m *Master) LoadDevice(id string) error {
 	return nil
 }
 
-func (m *Master) UnLoadDevice(id string) {
+func (m *ModbusMaster) UnLoadDevice(id string) {
 	if d, ok := m.devices[id]; ok {
 		_ = d.Close()
 		delete(m.devices, id)
 	}
 }
 
-func (m *Master) LoadDevices() error {
+func (m *ModbusMaster) LoadDevices() error {
 	//清空
 	m.devices = make(map[string]*Device)
 
@@ -175,34 +193,34 @@ func (m *Master) LoadDevices() error {
 	return nil
 }
 
-func (m *Master) GetDevice(id string) *Device {
+func (m *ModbusMaster) GetDevice(id string) *Device {
 	return m.devices[id]
 }
 
-// 自动加载网关
-func EnsureMaster(linker, incoming string) (master *Master, err error) {
-	//此处应该加锁，避免重复创建
+func (m *ModbusMaster) polling() {
+	for m.opened {
+		for _, device := range m.devices {
 
-	id := linker + "/" + incoming
-	master = masters.Load(id)
-	if master == nil {
-		master = &Master{
-			LinkerId:   linker,
-			IncomingId: incoming,
-			//wait:       make(chan []byte),
+			//异步读
+			_ = pool.Insert(func() {
+				values, err := device.Poll()
+				if err != nil {
+					log.Error(err)
+					return
+				}
+				topic := fmt.Sprintf("device/%s/%s/property", device.ProductId, device.Id)
+				mqtt.Publish(topic, values)
+			})
+
+			//加上小间隔
+			//time.Sleep(1 * time.Second)
 		}
 
-		masters.Store(id, master)
-
-		err = master.Open()
-		//if err != nil {
-		//	return nil, err
-		//}
+		//轮询间隔
+		if m.PollingInterval > 0 {
+			time.Sleep(time.Duration(m.PollingInterval) * time.Second)
+		} else {
+			time.Sleep(time.Minute)
+		}
 	}
-	return
-}
-
-func GetMaster(linker, incoming string) *Master {
-	id := linker + "/" + incoming
-	return masters.Load(id)
 }
