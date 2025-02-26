@@ -14,7 +14,7 @@ func init() {
 	api.Register("GET", "modbus/device/list", curd.ApiList[internal.Device]())
 	api.Register("POST", "modbus/device/create", curd.ApiCreate[internal.Device]())
 	api.Register("GET", "modbus/device/:id", curd.ApiGet[internal.Device]())
-	api.Register("POST", "modbus/device/:id", curd.ApiUpdate[internal.Device]("id", "name", "description", "product_id", "disabled", "linker_id", "incoming_id", "slave"))
+	api.Register("POST", "modbus/device/:id", curd.ApiUpdate[internal.Device]("id", "name", "description", "product_id", "disabled", "master_id", "slave"))
 	api.Register("GET", "modbus/device/:id/delete", curd.ApiDelete[internal.Device]())
 	api.Register("GET", "modbus/device/:id/enable", curd.ApiDisable[internal.Device](false))
 	api.Register("GET", "modbus/device/:id/disable", curd.ApiDisable[internal.Device](true))

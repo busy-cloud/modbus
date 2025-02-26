@@ -16,9 +16,8 @@ import (
 type Device struct {
 	types.Device `xorm:"extends"`
 
-	LinkerId   string `json:"linker_id,omitempty" xorm:"index"`   //连接器
-	IncomingId string `json:"incoming_id,omitempty" xorm:"index"` //tcp服务器接入
-	Slave      uint8  `json:"slave,omitempty"`                    //从站号
+	MasterId string `json:"master_id,omitempty" xorm:"index"` //主站ID
+	Slave    uint8  `json:"slave,omitempty"`                  //从站号
 
 	master  *ModbusMaster
 	product *Product

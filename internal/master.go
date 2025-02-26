@@ -11,7 +11,8 @@ import (
 	"time"
 )
 
-type Master struct {
+// ModbusMaster modbus主站
+type ModbusMaster struct {
 	Id              string    `json:"id,omitempty" xorm:"pk"`
 	Name            string    `json:"name,omitempty"`
 	Description     string    `json:"description,omitempty"`
@@ -21,11 +22,6 @@ type Master struct {
 	PollingInterval uint      `json:"polling_interval,omitempty"` //轮询间隔(s)
 	Disabled        bool      `json:"disabled,omitempty"`         //禁用
 	Created         time.Time `json:"created,omitempty" xorm:"created"`
-}
-
-// ModbusMaster modbus主站
-type ModbusMaster struct {
-	Master `xorm:"extends"`
 
 	//packets chan *Packet
 	devices map[string]*Device
@@ -174,7 +170,7 @@ func (m *ModbusMaster) LoadDevices() error {
 	m.devices = make(map[string]*Device)
 
 	var devices []*Device
-	err := db.Engine.Where("linker_id=?", m.LinkerId).And("incoming_id=?", m.IncomingId).Find(&devices)
+	err := db.Engine.Where("master_id=?", m.Id).Find(&devices)
 	if err != nil {
 		return err
 	}
