@@ -122,12 +122,7 @@ func (d *Device) Read(code uint8, offset uint16, length uint16) ([]byte, error) 
 	_ = binary.Write(buf, binary.LittleEndian, CRC16(buf.Bytes()))
 
 	//发送
-	err := d.master.Write(buf.Bytes())
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := d.master.ReadAtLeast(7)
+	res, err := d.master.Ask(buf.Bytes(), 7)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +131,7 @@ func (d *Device) Read(code uint8, offset uint16, length uint16) ([]byte, error) 
 	ln := 5 + cnt
 	//长度不够，继续读
 	for len(res) < ln {
-		b, e := d.master.ReadAtLeast(ln - len(res))
+		b, e := d.master.Ask(nil, ln-len(res))
 		if e != nil {
 			return nil, e
 		}
@@ -171,12 +166,7 @@ func (d *Device) Write(code uint8, offset uint16, value any) error {
 	_ = binary.Write(buf, binary.LittleEndian, CRC16(buf.Bytes()))
 
 	//发送
-	err := d.master.Write(buf.Bytes())
-	if err != nil {
-		return err
-	}
-
-	_, err = d.master.ReadAtLeast(buf.Len()) //写数据时，返回数据一样，长度也一样
+	_, err := d.master.Ask(buf.Bytes(), buf.Len()) //写数据时，返回数据一样，长度也一样
 
 	return err
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/busy-cloud/boat/lib"
 	"github.com/busy-cloud/boat/log"
 	"github.com/busy-cloud/boat/mqtt"
+	"sync"
 	"time"
 )
 
@@ -22,6 +23,7 @@ type Master struct {
 	opened bool
 
 	wait chan []byte
+	lock sync.Mutex
 }
 
 func (m *Master) Write(request []byte) error {
@@ -48,6 +50,37 @@ func (m *Master) ReadAtLeast(n int) ([]byte, error) {
 			return nil, err
 		}
 		ret = append(ret, buf...)
+	}
+
+	return ret, nil
+}
+
+func (m *Master) Ask(request []byte, n int) ([]byte, error) {
+	//加锁，避免重入（同一连接下，线程均等待，回头可以改成队列）
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	//发送请求
+	if len(request) > 0 {
+		err := m.Write(request)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var ret []byte
+
+	for len(ret) < n {
+		buf, err := m.Read()
+		if err != nil {
+			return nil, err
+		}
+		ret = append(ret, buf...)
+		if len(ret) > 2 {
+			if ret[1]&0x80 > 0 {
+				return nil, fmt.Errorf("modbus error %d", ret[1])
+			}
+		}
 	}
 
 	return ret, nil
