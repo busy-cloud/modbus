@@ -138,7 +138,7 @@ func (m *ModbusMaster) Open() error {
 
 func (m *ModbusMaster) LoadDevice(id string) error {
 	var device Device
-	has, err := db.Engine.ID(id).Get(&device)
+	has, err := db.Engine().ID(id).Get(&device)
 	if err != nil {
 		return err
 	}
@@ -170,7 +170,7 @@ func (m *ModbusMaster) LoadDevices() error {
 	m.devices = make(map[string]*Device)
 
 	var devices []*Device
-	err := db.Engine.Where("master_id=?", m.Id).Find(&devices)
+	err := db.Engine().Where("master_id=?", m.Id).Find(&devices)
 	if err != nil {
 		return err
 	}

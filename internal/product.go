@@ -38,7 +38,7 @@ type Product struct {
 func (p *Product) Load() error {
 
 	var mapper ProductMappers
-	has, err := db.Engine.ID(schemas.PK{p.Id, "config"}).Get(&mapper)
+	has, err := db.Engine().ID(schemas.PK{p.Id, "config"}).Get(&mapper)
 	if err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func (p *Product) Load() error {
 	p.mappers = mapper.Content
 
 	var poller ProductPollers
-	has, err = db.Engine.ID(schemas.PK{p.Id, "config"}).Get(&poller)
+	has, err = db.Engine().ID(schemas.PK{p.Id, "config"}).Get(&poller)
 	if err != nil {
 		return err
 	}
@@ -65,7 +65,7 @@ var products lib.Map[Product]
 
 func LoadProduct(id string) (*Product, error) {
 	var product Product
-	has, err := db.Engine.ID(id).Get(&product.Product)
+	has, err := db.Engine().ID(id).Get(&product.Product)
 	if err != nil {
 		return nil, err
 	}

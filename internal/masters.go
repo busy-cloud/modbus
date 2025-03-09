@@ -16,7 +16,7 @@ func GetMaster(id string) *ModbusMaster {
 func LoadMaster(id string) (*ModbusMaster, error) {
 	//从数据库加载
 	var master ModbusMaster
-	has, err := db.Engine.ID(id).Get(&master)
+	has, err := db.Engine().ID(id).Get(&master)
 	if err != nil {
 		return nil, err
 	}
@@ -50,14 +50,14 @@ func EnsureMaster(linker, incoming string) (*ModbusMaster, error) {
 
 	//从数据库加载
 	var master ModbusMaster
-	has, err := db.Engine.Where("linker_id=? AND incoming_id=?", linker, incoming).Get(&master)
+	has, err := db.Engine().Where("linker_id=? AND incoming_id=?", linker, incoming).Get(&master)
 	if err != nil {
 		return nil, err
 	}
 	if !has {
 		//return nil, errors.New("master not found")
 		master.Id = LinkerAndIncoming
-		_, err = db.Engine.InsertOne(&master)
+		_, err = db.Engine().InsertOne(&master)
 		if err != nil {
 			return nil, err
 		}
