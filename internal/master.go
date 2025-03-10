@@ -37,9 +37,7 @@ func (m *ModbusMaster) LinkerAndIncomingID() string {
 }
 
 func (m *ModbusMaster) Write(request []byte) error {
-	tkn := mqtt.Publish("link/"+m.LinkerId+"/"+m.IncomingId+"/down", request)
-	tkn.Wait()
-	return tkn.Error()
+	return WriteTo(m.LinkerId, m.IncomingId, request)
 }
 
 func (m *ModbusMaster) Read() ([]byte, error) {

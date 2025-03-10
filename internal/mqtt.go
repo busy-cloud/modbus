@@ -110,3 +110,14 @@ func Startup() error {
 
 	return nil
 }
+
+func WriteTo(linker, incoming string, data []byte) error {
+	topic := "link/" + linker
+	if incoming != "" {
+		topic += "/" + incoming
+	}
+	topic += "/up"
+	tkn := mqtt.Publish(topic, data)
+	tkn.Wait()
+	return tkn.Error()
+}
