@@ -81,7 +81,7 @@ func (m *ModbusMaster) Read(slave, code uint8, offset uint16, length uint16) ([]
 	cnt := int(res[2]) //字节数
 	ln := 5 + cnt
 	//长度不够，继续读
-	for len(res) < ln {
+	if len(res) < ln {
 		b, e := m.ask(nil, ln-len(res))
 		if e != nil {
 			return nil, e

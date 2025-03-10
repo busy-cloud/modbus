@@ -21,7 +21,7 @@ func (p *Poller) Parse(mappers *Mappers, buf []byte, values map[string]any) erro
 	switch p.Code {
 	case 1:
 		for _, m := range mappers.Coils {
-			if p.Address <= m.Address && p.Length > m.Address-p.Address {
+			if p.Address <= m.Address && m.Address < p.Address+p.Length {
 				ret, err := m.Parse(p.Address, buf)
 				if err != nil {
 					log.Error(err)
@@ -32,7 +32,7 @@ func (p *Poller) Parse(mappers *Mappers, buf []byte, values map[string]any) erro
 		}
 	case 2:
 		for _, m := range mappers.DiscreteInputs {
-			if p.Address <= m.Address && p.Length > m.Address-p.Address {
+			if p.Address <= m.Address && m.Address < p.Address+p.Length {
 				ret, err := m.Parse(p.Address, buf)
 				if err != nil {
 					log.Error(err)
@@ -43,7 +43,7 @@ func (p *Poller) Parse(mappers *Mappers, buf []byte, values map[string]any) erro
 		}
 	case 3:
 		for _, m := range mappers.HoldingRegisters {
-			if p.Address <= m.Address && p.Length > m.Address-p.Address {
+			if p.Address <= m.Address && m.Address < p.Address+p.Length {
 				ret, err := m.Parse(p.Address, buf)
 				if err != nil {
 					log.Error(err)
@@ -61,7 +61,7 @@ func (p *Poller) Parse(mappers *Mappers, buf []byte, values map[string]any) erro
 		}
 	case 4:
 		for _, m := range mappers.HoldingRegisters {
-			if p.Address <= m.Address && p.Length > m.Address-p.Address {
+			if p.Address <= m.Address && m.Address < p.Address+p.Length {
 				ret, err := m.Parse(p.Address, buf)
 				if err != nil {
 					log.Error(err)
