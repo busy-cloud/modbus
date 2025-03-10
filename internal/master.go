@@ -34,38 +34,6 @@ type ModbusMaster struct {
 	lock sync.Mutex
 }
 
-func (m *ModbusMaster) LinkerAndIncomingID() string {
-	return m.LinkerId + "_" + m.IncomingId
-}
-
-func (m *ModbusMaster) Read(slave, code uint8, offset uint16, length uint16) ([]byte, error) {
-	buf := bytes.NewBuffer(nil)
-	buf.WriteByte(slave)
-	buf.WriteByte(code)
-	_ = binary.Write(buf, binary.BigEndian, offset)
-	_ = binary.Write(buf, binary.BigEndian, length)
-	_ = binary.Write(buf, binary.LittleEndian, CRC16(buf.Bytes()))
-
-	//发送
-	res, err := m.ask(buf.Bytes(), 7)
-	if err != nil {
-		return nil, err
-	}
-
-	cnt := int(res[2]) //字节数
-	ln := 5 + cnt
-	//长度不够，继续读
-	for len(res) < ln {
-		b, e := m.ask(nil, ln-len(res))
-		if e != nil {
-			return nil, e
-		}
-		res = append(res, b...)
-	}
-
-	return res[3 : len(res)-2], nil //除去包头和crc校验码
-}
-
 func (m *ModbusMaster) Write(slave, code uint8, offset uint16, value any) error {
 	buf := bytes.NewBuffer(nil)
 	buf.WriteByte(slave)
@@ -94,6 +62,34 @@ func (m *ModbusMaster) Write(slave, code uint8, offset uint16, value any) error 
 	_, err := m.ask(buf.Bytes(), buf.Len()) //写数据时，返回数据一样，长度也一样
 
 	return err
+}
+
+func (m *ModbusMaster) Read(slave, code uint8, offset uint16, length uint16) ([]byte, error) {
+	buf := bytes.NewBuffer(nil)
+	buf.WriteByte(slave)
+	buf.WriteByte(code)
+	_ = binary.Write(buf, binary.BigEndian, offset)
+	_ = binary.Write(buf, binary.BigEndian, length)
+	_ = binary.Write(buf, binary.LittleEndian, CRC16(buf.Bytes()))
+
+	//发送
+	res, err := m.ask(buf.Bytes(), 7)
+	if err != nil {
+		return nil, err
+	}
+
+	cnt := int(res[2]) //字节数
+	ln := 5 + cnt
+	//长度不够，继续读
+	for len(res) < ln {
+		b, e := m.ask(nil, ln-len(res))
+		if e != nil {
+			return nil, e
+		}
+		res = append(res, b...)
+	}
+
+	return res[3 : len(res)-2], nil //除去包头和crc校验码
 }
 
 func (m *ModbusMaster) write(request []byte) error {
