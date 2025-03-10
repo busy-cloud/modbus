@@ -1,12 +1,14 @@
 package internal
 
 import (
+	"bytes"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"github.com/busy-cloud/boat/db"
 	"github.com/busy-cloud/boat/log"
 	"github.com/busy-cloud/boat/mqtt"
-	"github.com/busy-cloud/boat/pool"
+	"github.com/spf13/cast"
 	"sync"
 	"time"
 )
@@ -36,11 +38,69 @@ func (m *ModbusMaster) LinkerAndIncomingID() string {
 	return m.LinkerId + "_" + m.IncomingId
 }
 
-func (m *ModbusMaster) Write(request []byte) error {
+func (m *ModbusMaster) Read(slave, code uint8, offset uint16, length uint16) ([]byte, error) {
+	buf := bytes.NewBuffer(nil)
+	buf.WriteByte(slave)
+	buf.WriteByte(code)
+	_ = binary.Write(buf, binary.BigEndian, offset)
+	_ = binary.Write(buf, binary.BigEndian, length)
+	_ = binary.Write(buf, binary.LittleEndian, CRC16(buf.Bytes()))
+
+	//发送
+	res, err := m.ask(buf.Bytes(), 7)
+	if err != nil {
+		return nil, err
+	}
+
+	cnt := int(res[2]) //字节数
+	ln := 5 + cnt
+	//长度不够，继续读
+	for len(res) < ln {
+		b, e := m.ask(nil, ln-len(res))
+		if e != nil {
+			return nil, e
+		}
+		res = append(res, b...)
+	}
+
+	return res[3 : len(res)-2], nil //除去包头和crc校验码
+}
+
+func (m *ModbusMaster) Write(slave, code uint8, offset uint16, value any) error {
+	buf := bytes.NewBuffer(nil)
+	buf.WriteByte(slave)
+	buf.WriteByte(code)
+	_ = binary.Write(buf, binary.BigEndian, offset)
+	switch code {
+	case 5: //单个线圈
+		if cast.ToBool(value) {
+			buf.WriteByte(0xff)
+			buf.WriteByte(0xff)
+		} else {
+			buf.WriteByte(0x00)
+			buf.WriteByte(0xff)
+		}
+	//case 15: //多个线圈
+	case 6: //单个寄存器
+		_ = binary.Write(buf, binary.BigEndian, cast.ToUint16(value))
+	//case 16: //多个寄存器
+	default:
+		return fmt.Errorf("invalid code: %d", code)
+	}
+
+	_ = binary.Write(buf, binary.LittleEndian, CRC16(buf.Bytes()))
+
+	//发送
+	_, err := m.ask(buf.Bytes(), buf.Len()) //写数据时，返回数据一样，长度也一样
+
+	return err
+}
+
+func (m *ModbusMaster) write(request []byte) error {
 	return WriteTo(m.LinkerId, m.IncomingId, request)
 }
 
-func (m *ModbusMaster) Read() ([]byte, error) {
+func (m *ModbusMaster) read() ([]byte, error) {
 	select {
 	case buf := <-m.wait:
 		return buf, nil
@@ -49,11 +109,11 @@ func (m *ModbusMaster) Read() ([]byte, error) {
 	}
 }
 
-func (m *ModbusMaster) ReadAtLeast(n int) ([]byte, error) {
+func (m *ModbusMaster) readAtLeast(n int) ([]byte, error) {
 	var ret []byte
 
 	for len(ret) < n {
-		buf, err := m.Read()
+		buf, err := m.read()
 		if err != nil {
 			return nil, err
 		}
@@ -63,14 +123,14 @@ func (m *ModbusMaster) ReadAtLeast(n int) ([]byte, error) {
 	return ret, nil
 }
 
-func (m *ModbusMaster) Ask(request []byte, n int) ([]byte, error) {
+func (m *ModbusMaster) ask(request []byte, n int) ([]byte, error) {
 	//加锁，避免重入（同一连接下，线程均等待，回头可以改成队列）
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
 	//发送请求
 	if len(request) > 0 {
-		err := m.Write(request)
+		err := m.write(request)
 		if err != nil {
 			return nil, err
 		}
@@ -79,7 +139,7 @@ func (m *ModbusMaster) Ask(request []byte, n int) ([]byte, error) {
 	var ret []byte
 
 	for len(ret) < n {
-		buf, err := m.Read()
+		buf, err := m.read()
 		if err != nil {
 			return nil, err
 		}
@@ -196,15 +256,15 @@ func (m *ModbusMaster) polling() {
 		for _, device := range m.devices {
 
 			//异步读
-			_ = pool.Insert(func() {
-				values, err := device.Poll()
-				if err != nil {
-					log.Error(err)
-					return
-				}
-				topic := fmt.Sprintf("device/%s/%s/property", device.ProductId, device.Id)
-				mqtt.Publish(topic, values)
-			})
+			//_ = pool.Insert(func() {
+			values, err := device.Poll()
+			if err != nil {
+				log.Error(err)
+				return
+			}
+			topic := fmt.Sprintf("device/%s/%s/property", device.ProductId, device.Id)
+			mqtt.Publish(topic, values)
+			//})
 
 			//加上小间隔
 			//time.Sleep(1 * time.Second)
