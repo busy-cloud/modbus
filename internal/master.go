@@ -43,10 +43,10 @@ func (m *ModbusMaster) Write(slave, code uint8, offset uint16, value any) error 
 	case 5: //单个线圈
 		if cast.ToBool(value) {
 			buf.WriteByte(0xff)
-			buf.WriteByte(0xff)
+			buf.WriteByte(0x00)
 		} else {
 			buf.WriteByte(0x00)
-			buf.WriteByte(0xff)
+			buf.WriteByte(0x00)
 		}
 	//case 15: //多个线圈
 	case 6: //单个寄存器

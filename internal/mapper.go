@@ -1,13 +1,15 @@
 package internal
 
+import "github.com/busy-cloud/iot/types"
+
 type Mappers struct {
-	Coils            []*PointBit  `json:"coils,omitempty"`
-	DiscreteInputs   []*PointBit  `json:"discrete_inputs,omitempty"`
-	HoldingRegisters []*PointWord `json:"holding_registers,omitempty"`
-	InputRegisters   []*PointWord `json:"input_registers,omitempty"`
+	Coils            []*types.PointBit  `json:"coils,omitempty"`
+	DiscreteInputs   []*types.PointBit  `json:"discrete_inputs,omitempty"`
+	HoldingRegisters []*types.PointWord `json:"holding_registers,omitempty"`
+	InputRegisters   []*types.PointWord `json:"input_registers,omitempty"`
 }
 
-func (p *Mappers) Lookup(name string) (pt Point, code uint8, address uint16, size uint16) {
+func (p *Mappers) Lookup(name string) (pt types.Point, code uint8, address uint16, size uint16) {
 	for _, m := range p.Coils {
 		if m.Name == name {
 			return m, 1, m.Address, 1
