@@ -136,6 +136,16 @@ func (d *Device) Set(key string, value any) error {
 		return err
 	}
 
+	//将读指令变为写指令
+	switch code {
+	case 1, 2:
+		code = 5
+	case 3, 4:
+		code = 6
+	default:
+		return fmt.Errorf("invalid code %d", code)
+	}
+
 	err = d.master.Write(d.Slave, code, addr, buf)
 	if err != nil {
 		return err
