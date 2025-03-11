@@ -6,6 +6,7 @@ import (
 	"github.com/busy-cloud/boat/cron"
 	"github.com/busy-cloud/boat/log"
 	"github.com/busy-cloud/boat/mqtt"
+	"github.com/busy-cloud/iot/product"
 	"github.com/busy-cloud/iot/types"
 	"go.uber.org/multierr"
 )
@@ -17,19 +18,21 @@ type Device struct {
 	Slave    uint8  `json:"slave,omitempty"`                  //从站号
 
 	master  *ModbusMaster
-	product *Product
-	jobs    []*cron.Job
+	mappers *Mappers
+	pollers *Pollers
+
+	jobs []*cron.Job
 }
 
-func (d *Device) Open() error {
-	if d.product == nil {
-		return errors.New("product not exist")
+func (d *Device) Open() (err error) {
+	err, d.mappers = product.LoadConfig[Mappers](d.ProductId, "mapper")
+	if err != nil {
+		return err
 	}
-	if d.product.pollers == nil {
-		return errors.New("product.pollers not exist")
+	err, d.pollers = product.LoadConfig[Pollers](d.ProductId, "poller")
+	if err != nil {
+		//return err
 	}
-
-	p := d.product.pollers
 
 	fn := func() {
 		values, err := d.Poll()
@@ -45,15 +48,15 @@ func (d *Device) Open() error {
 	}
 
 	//添加计划任务
-	if p.Crontab != "" {
-		job, err := cron.Crontab(p.Crontab, fn)
+	if d.pollers.Crontab != "" {
+		job, err := cron.Crontab(d.pollers.Crontab, fn)
 		if err != nil {
 			return err
 		}
 		d.jobs = append(d.jobs, job)
 	}
-	if p.Interval > 0 {
-		job, err := cron.Interval(int64(p.Interval), fn)
+	if d.pollers.Interval > 0 {
+		job, err := cron.Interval(int64(d.pollers.Interval), fn)
 		if err != nil {
 			return err
 		}
@@ -80,21 +83,18 @@ func (d *Device) Close() error {
 }
 
 func (d *Device) Poll() (map[string]any, error) {
-	if d.product == nil {
-		return nil, errors.New("product not exist")
-	}
-	if d.product.pollers == nil {
+	if d.pollers == nil {
 		return nil, errors.New("pollers not exist")
 	}
 
 	values := map[string]any{}
-	for _, p := range d.product.pollers.Pollers {
+	for _, p := range d.pollers.Pollers {
 		buf, err := d.master.Read(d.Slave, p.Code, p.Address, p.Length)
 		if err != nil {
 			return nil, err
 		}
 		//解析
-		err = p.Parse(d.product.mappers, buf, values)
+		err = p.Parse(d.mappers, buf, values)
 		if err != nil {
 			return nil, err
 		}
@@ -104,14 +104,11 @@ func (d *Device) Poll() (map[string]any, error) {
 }
 
 func (d *Device) Get(key string) (any, error) {
-	if d.product == nil {
-		return nil, errors.New("product not exist")
-	}
-	if d.product.mappers == nil {
+	if d.mappers == nil {
 		return nil, errors.New("mappers not exist")
 	}
 
-	pt, code, addr, size := d.product.mappers.Lookup(key)
+	pt, code, addr, size := d.mappers.Lookup(key)
 	if pt == nil {
 		return nil, errors.New("point not exist")
 	}
@@ -125,14 +122,11 @@ func (d *Device) Get(key string) (any, error) {
 }
 
 func (d *Device) Set(key string, value any) error {
-	if d.product == nil {
-		return errors.New("product not exist")
-	}
-	if d.product.mappers == nil {
+	if d.mappers == nil {
 		return errors.New("mappers not exist")
 	}
 
-	pt, code, addr, _ := d.product.mappers.Lookup(key)
+	pt, code, addr, _ := d.mappers.Lookup(key)
 	if pt == nil {
 		return errors.New("point not exist")
 	}

@@ -6,8 +6,8 @@ github.com/busy-cloud/boat v0.1.0 h1:hFZ579DBLNhSQMae2PqxVbYvMZpozZsgK3D3uzZsiDI
 github.com/busy-cloud/boat v0.1.0/go.mod h1:BoQjjEa6gZRxkUGspu8Pe3C6OWLze2SNH0n1J8xAJKs=
 github.com/busy-cloud/connector v0.1.0 h1:QvVLF8RRiwAoPXThRSKpjymDc1ZWqiF75P99kwvAFlY=
 github.com/busy-cloud/connector v0.1.0/go.mod h1:05ObweHP0sFJyNQXPBuVfNMCXcgUIND9QDjKLW9qIQU=
-github.com/busy-cloud/iot v0.1.0 h1:1wldBPmMGusglCQkI1TzYzYZKYEgzrculxRx7LXS3Ec=
-github.com/busy-cloud/iot v0.1.0/go.mod h1:o7j9B+8SG3W55LmO+Z8FBPgg5p4BvgoA9C6Y1FIoaHg=
+github.com/busy-cloud/iot v0.1.1 h1:4o0oGvC3R5S1SbxKXfjeTfKlaIG5eZIf1+0oGZKX7p0=
+github.com/busy-cloud/iot v0.1.1/go.mod h1:o7j9B+8SG3W55LmO+Z8FBPgg5p4BvgoA9C6Y1FIoaHg=
 github.com/bytedance/sonic v1.12.10 h1:uVCQr6oS5669E9ZVW0HyksTLfNS7Q/9hV6IVS4nEMsI=
 github.com/bytedance/sonic v1.12.10/go.mod h1:uVvFidNmlt9+wa31S1urfwwthTWteBgG0hWuoKAXTx8=
 github.com/bytedance/sonic/loader v0.1.1/go.mod h1:ncP89zfokxS5LZrJxl5z0UJcsk4M4yY2JpfqGeCtNLU=

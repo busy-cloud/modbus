@@ -201,10 +201,6 @@ func (m *ModbusMaster) LoadDevice(id string) error {
 	}
 	m.devices[id] = &device
 	device.master = m
-	device.product, err = EnsureProduct(device.ProductId)
-	if err != nil {
-		log.Printf("failed to ensure product: %v", err)
-	}
 	err = device.Open()
 	if err != nil {
 		log.Printf("failed to open device: %v", err)
@@ -231,10 +227,6 @@ func (m *ModbusMaster) LoadDevices() error {
 	for _, device := range devices {
 		m.devices[device.Id] = device
 		device.master = m
-		device.product, err = EnsureProduct(device.ProductId)
-		if err != nil {
-			log.Printf("failed to ensure product: %v", err)
-		}
 		err = device.Open()
 		if err != nil {
 			log.Printf("failed to open device: %v", err)
