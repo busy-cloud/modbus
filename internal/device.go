@@ -25,11 +25,11 @@ type Device struct {
 }
 
 func (d *Device) Open() (err error) {
-	err, d.mappers = product.LoadConfig[Mappers](d.ProductId, "mapper")
+	err, d.mappers = product.LoadConfig[Mappers](d.ProductId, "modbus_mapper")
 	if err != nil {
 		return err
 	}
-	err, d.pollers = product.LoadConfig[Pollers](d.ProductId, "poller")
+	err, d.pollers = product.LoadConfig[Pollers](d.ProductId, "modbus_poller")
 	if err != nil {
 		//return err
 	}
