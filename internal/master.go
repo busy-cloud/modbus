@@ -13,6 +13,10 @@ import (
 	"time"
 )
 
+func init() {
+	db.Register(&ModbusMaster{})
+}
+
 // ModbusMaster modbus主站
 type ModbusMaster struct {
 	Id              string    `json:"id,omitempty" xorm:"pk"`
@@ -20,10 +24,11 @@ type ModbusMaster struct {
 	Description     string    `json:"description,omitempty"`
 	LinkerId        string    `json:"linker_id" xorm:"index"`
 	IncomingId      string    `json:"incoming_id" xorm:"index"`
-	Polling         bool      `json:"polling,omitempty"`          //开启轮询
-	PollingInterval uint      `json:"polling_interval,omitempty"` //轮询间隔(s)
-	Disabled        bool      `json:"disabled,omitempty"`         //禁用
-	Created         time.Time `json:"created,omitempty" xorm:"created"`
+	Polling         bool      `json:"polling,omitempty"`           //开启轮询
+	PollingInterval uint      `json:"polling_interval,omitempty"`  //轮询间隔(s)
+	Running         bool      `json:"running,omitempty", xorm:"-"` //实时状态
+	Disabled        bool      `json:"disabled,omitempty"`          //禁用
+	Created         time.Time `json:"created,omitempty,omitzero" xorm:"created"`
 
 	//packets chan *Packet
 	devices map[string]*Device
@@ -32,6 +37,10 @@ type ModbusMaster struct {
 
 	wait chan []byte
 	lock sync.Mutex
+}
+
+func (m *ModbusMaster) ID() string {
+	return CombineId(m.LinkerId, m.IncomingId)
 }
 
 func (m *ModbusMaster) Write(slave, code uint8, offset uint16, value any) error {

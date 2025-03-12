@@ -22,6 +22,7 @@ func Startup() error {
 		}
 		master.onData(payload)
 	})
+
 	mqtt.Subscribe(protocol+"/+/up", func(topic string, payload []byte) {
 		ss := strings.Split(topic, "/")
 		linker := ss[1]
@@ -49,6 +50,7 @@ func Startup() error {
 			log.Println(err)
 		}
 	})
+
 	mqtt.Subscribe(protocol+"/+/open", func(topic string, payload []byte) {
 		ss := strings.Split(topic, "/")
 		linker := ss[1]
@@ -74,6 +76,7 @@ func Startup() error {
 			_ = master.Close()
 		}
 	})
+
 	mqtt.Subscribe(protocol+"/+/close", func(topic string, payload []byte) {
 		ss := strings.Split(topic, "/")
 		linker := ss[1]

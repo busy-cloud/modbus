@@ -9,41 +9,56 @@ import (
 var masters lib.Map[ModbusMaster]
 var mastersByLinkerAndIncoming lib.Map[ModbusMaster]
 
+func CombineId(linker, incoming string) string {
+	return linker + "_" + incoming
+}
+
 func GetMaster(id string) *ModbusMaster {
 	return masters.Load(id)
 }
 
-func LoadMaster(id string) (*ModbusMaster, error) {
+func LoadMaster(id string) error {
 	//从数据库加载
 	var master ModbusMaster
 	has, err := db.Engine().ID(id).Get(&master)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if !has {
-		return nil, errors.New("master not found")
+		return errors.New("master not found")
 	}
 
-	masters.Store(master.Id, &master)
-	LinkerAndIncoming := master.LinkerId + "_" + master.IncomingId
-	mastersByLinkerAndIncoming.Store(LinkerAndIncoming, &master)
+	last := masters.LoadAndStore(master.Id, &master)
+	mastersByLinkerAndIncoming.Store(master.ID(), &master)
+	if last != nil {
+		_ = last.Close()
+	}
 
-	return &master, nil
+	err = master.Open()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func Unload(id string) {
-
+func UnloadMaster(id string) error {
+	m := masters.LoadAndDelete(id)
+	if m != nil {
+		mastersByLinkerAndIncoming.Delete(m.ID())
+		return m.Close()
+	}
+	return nil
 }
 
 func GetMasterLinkerAndIncoming(linker, incoming string) *ModbusMaster {
-	LinkerAndIncoming := linker + "_" + incoming
-	return mastersByLinkerAndIncoming.Load(LinkerAndIncoming)
+	return mastersByLinkerAndIncoming.Load(CombineId(linker, incoming))
 }
 
 // EnsureMaster 自动加载网关
 func EnsureMaster(linker, incoming string) (*ModbusMaster, error) {
-	LinkerAndIncoming := linker + "_" + incoming
-	m := mastersByLinkerAndIncoming.Load(LinkerAndIncoming)
+	id := CombineId(linker, incoming)
+	m := mastersByLinkerAndIncoming.Load(id)
 	if m != nil {
 		return m, nil
 	}
@@ -56,7 +71,7 @@ func EnsureMaster(linker, incoming string) (*ModbusMaster, error) {
 	}
 	if !has {
 		//return nil, errors.New("master not found")
-		master.Id = LinkerAndIncoming
+		master.Id = id
 		_, err = db.Engine().InsertOne(&master)
 		if err != nil {
 			return nil, err
@@ -64,7 +79,12 @@ func EnsureMaster(linker, incoming string) (*ModbusMaster, error) {
 	}
 
 	masters.Store(master.Id, &master)
-	mastersByLinkerAndIncoming.Store(LinkerAndIncoming, &master)
+	mastersByLinkerAndIncoming.Store(id, &master)
+
+	err = master.Open()
+	if err != nil {
+		return nil, err
+	}
 
 	return &master, nil
 }

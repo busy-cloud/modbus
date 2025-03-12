@@ -2,7 +2,6 @@ package boot
 
 import (
 	"github.com/busy-cloud/boat/boot"
-	_ "github.com/busy-cloud/modbus/apis" //注册接口
 	"github.com/busy-cloud/modbus/internal"
 )
 

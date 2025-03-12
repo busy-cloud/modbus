@@ -1,23 +1,61 @@
-package apis
+package internal
 
 import (
 	"encoding/hex"
 	"github.com/busy-cloud/boat/api"
 	"github.com/busy-cloud/boat/curd"
-	"github.com/busy-cloud/modbus/internal"
 	"github.com/gin-gonic/gin"
 )
 
 func init() {
-	api.Register("POST", "modbus/master/count", curd.ApiCount[internal.ModbusMaster]())
-	api.Register("POST", "modbus/master/search", curd.ApiSearch[internal.ModbusMaster]())
-	api.Register("GET", "modbus/master/list", curd.ApiList[internal.ModbusMaster]())
-	api.Register("POST", "modbus/master/create", curd.ApiCreate[internal.ModbusMaster]())
-	api.Register("GET", "modbus/master/:id", curd.ApiGet[internal.ModbusMaster]())
-	api.Register("POST", "modbus/master/:id", curd.ApiUpdate[internal.ModbusMaster]("id", "name", "description", "polling", "polling_interval", "disabled", "linker_id", "incoming_id"))
-	api.Register("GET", "modbus/master/:id/delete", curd.ApiDelete[internal.ModbusMaster]())
-	api.Register("GET", "modbus/master/:id/enable", curd.ApiDisable[internal.ModbusMaster](false))
-	api.Register("GET", "modbus/master/:id/disable", curd.ApiDisable[internal.ModbusMaster](true))
+	api.Register("POST", "modbus/master/count", curd.ApiCount[ModbusMaster]())
+	api.Register("POST", "modbus/master/search", curd.ApiSearchHook[ModbusMaster](func(datum []*ModbusMaster) error {
+		for _, data := range datum {
+			m := GetMaster(data.Id)
+			if m != nil {
+				data.Running = m.opened
+			}
+		}
+		return nil
+	}))
+	api.Register("GET", "modbus/master/list", curd.ApiListHook[ModbusMaster](func(datum []*ModbusMaster) error {
+		for _, data := range datum {
+			m := GetMaster(data.Id)
+			if m != nil {
+				data.Running = m.opened
+			}
+		}
+		return nil
+	}))
+	api.Register("POST", "modbus/master/create", curd.ApiCreateHook[ModbusMaster](nil, func(m *ModbusMaster) error {
+		return LoadMaster(m.Id)
+	}))
+
+	api.Register("GET", "modbus/master/:id", curd.ApiGetHook[ModbusMaster](func(data *ModbusMaster) error {
+		m := GetMaster(data.Id)
+		if m != nil {
+			data.Running = m.opened
+		}
+		return nil
+	}))
+
+	api.Register("POST", "modbus/master/:id", curd.ApiUpdateHook[ModbusMaster](nil, func(m *ModbusMaster) error {
+		_ = UnloadMaster(m.Id)
+		return LoadMaster(m.Id)
+	}, "id", "name", "description", "polling", "polling_interval", "disabled", "linker_id", "incoming_id"))
+
+	api.Register("GET", "modbus/master/:id/delete", curd.ApiDeleteHook[ModbusMaster](nil, func(m *ModbusMaster) error {
+		return UnloadMaster(m.Id)
+	}))
+
+	api.Register("GET", "modbus/master/:id/enable", curd.ApiDisableHook[ModbusMaster](false, nil, func(id any) error {
+		return LoadMaster(id.(string))
+	}))
+
+	api.Register("GET", "modbus/master/:id/disable", curd.ApiDisableHook[ModbusMaster](true, nil, func(id any) error {
+		return UnloadMaster(id.(string))
+	}))
+
 	api.Register("GET", "modbus/master/:id/open", masterOpen)
 	api.Register("GET", "modbus/master/:id/close", masterClose)
 	api.Register("GET", "modbus/master/:id/read", masterRead)
@@ -25,7 +63,7 @@ func init() {
 }
 
 func masterOpen(ctx *gin.Context) {
-	c := internal.GetMaster(ctx.Param("id"))
+	c := GetMaster(ctx.Param("id"))
 	if c == nil {
 		api.Fail(ctx, "找不到连接")
 		return
@@ -41,7 +79,7 @@ func masterOpen(ctx *gin.Context) {
 }
 
 func masterClose(ctx *gin.Context) {
-	c := internal.GetMaster(ctx.Param("id"))
+	c := GetMaster(ctx.Param("id"))
 	if c == nil {
 		api.Fail(ctx, "找不到连接")
 		return
@@ -64,7 +102,7 @@ type masterReadBody struct {
 }
 
 func masterRead(ctx *gin.Context) {
-	c := internal.GetMaster(ctx.Param("id"))
+	c := GetMaster(ctx.Param("id"))
 	if c == nil {
 		api.Fail(ctx, "master not found")
 		return
@@ -93,7 +131,7 @@ type masterWriteBody struct {
 }
 
 func masterWrite(ctx *gin.Context) {
-	c := internal.GetMaster(ctx.Param("id"))
+	c := GetMaster(ctx.Param("id"))
 	if c == nil {
 		api.Fail(ctx, "master not found")
 		return
