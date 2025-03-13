@@ -10,6 +10,9 @@ var masters lib.Map[ModbusMaster]
 var mastersByLinkerAndIncoming lib.Map[ModbusMaster]
 
 func CombineId(linker, incoming string) string {
+	if incoming == "" {
+		return linker
+	}
 	return linker + "_" + incoming
 }
 
