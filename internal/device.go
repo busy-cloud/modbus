@@ -21,8 +21,7 @@ type Device struct {
 	Station Station `json:"station,omitempty" xorm:"json"`
 
 	master  *ModbusMaster
-	mappers *Mappers
-	pollers *Pollers
+	options *Options
 
 	jobs []*cron.Job
 }
@@ -33,13 +32,9 @@ func (d *Device) Open() (err error) {
 	//	return err
 	//}
 
-	err, d.mappers = product.LoadConfig[Mappers](d.ProductId, "modbus_mapper")
+	err, d.options = product.LoadConfig[Options](d.ProductId, "modbus")
 	if err != nil {
 		return err
-	}
-	err, d.pollers = product.LoadConfig[Pollers](d.ProductId, "modbus_poller")
-	if err != nil {
-		//return err
 	}
 
 	fn := func() {
@@ -56,15 +51,15 @@ func (d *Device) Open() (err error) {
 	}
 
 	//添加计划任务
-	if d.pollers.Crontab != "" {
-		job, err := cron.Crontab(d.pollers.Crontab, fn)
+	if d.options.Crontab != "" {
+		job, err := cron.Crontab(d.options.Crontab, fn)
 		if err != nil {
 			return err
 		}
 		d.jobs = append(d.jobs, job)
 	}
-	if d.pollers.Interval > 0 {
-		job, err := cron.Interval(int64(d.pollers.Interval), fn)
+	if d.options.Interval > 0 {
+		job, err := cron.Interval(int64(d.options.Interval), fn)
 		if err != nil {
 			return err
 		}
@@ -91,18 +86,18 @@ func (d *Device) Close() error {
 }
 
 func (d *Device) Poll() (map[string]any, error) {
-	if d.pollers == nil {
-		return nil, errors.New("pollers not exist")
+	if d.options == nil {
+		return nil, errors.New("options not exist")
 	}
 
 	values := map[string]any{}
-	for _, p := range d.pollers.Pollers {
+	for _, p := range d.options.Pollers {
 		buf, err := d.master.Read(d.Station.Slave, p.Code, p.Address, p.Length)
 		if err != nil {
 			return nil, err
 		}
 		//解析
-		err = p.Parse(d.mappers, buf, values)
+		err = p.Parse(d.options.Mapper, buf, values)
 		if err != nil {
 			return nil, err
 		}
@@ -112,11 +107,11 @@ func (d *Device) Poll() (map[string]any, error) {
 }
 
 func (d *Device) Get(key string) (any, error) {
-	if d.mappers == nil {
+	if d.options == nil || d.options.Mapper == nil {
 		return nil, errors.New("mappers not exist")
 	}
 
-	pt, code, addr, size := d.mappers.Lookup(key)
+	pt, code, addr, size := d.options.Mapper.Lookup(key)
 	if pt == nil {
 		return nil, errors.New("point not exist")
 	}
@@ -130,11 +125,11 @@ func (d *Device) Get(key string) (any, error) {
 }
 
 func (d *Device) Set(key string, value any) error {
-	if d.mappers == nil {
+	if d.options == nil || d.options.Mapper == nil {
 		return errors.New("mappers not exist")
 	}
 
-	pt, code, addr, _ := d.mappers.Lookup(key)
+	pt, code, addr, _ := d.options.Mapper.Lookup(key)
 	if pt == nil {
 		return errors.New("point not exist")
 	}

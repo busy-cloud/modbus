@@ -17,7 +17,7 @@ type Poller struct {
 	Length  uint16 `json:"length"`  //长度
 }
 
-func (p *Poller) Parse(mappers *Mappers, buf []byte, values map[string]any) error {
+func (p *Poller) Parse(mappers *Mapper, buf []byte, values map[string]any) error {
 	switch p.Code {
 	case 1:
 		for _, m := range mappers.Coils {
