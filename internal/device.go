@@ -4,12 +4,17 @@ import (
 	"errors"
 	"fmt"
 	"github.com/busy-cloud/boat/cron"
+	"github.com/busy-cloud/boat/db"
 	"github.com/busy-cloud/boat/log"
 	"github.com/busy-cloud/boat/mqtt"
 	"github.com/busy-cloud/iot/device"
 	"github.com/busy-cloud/iot/product"
 	"go.uber.org/multierr"
 )
+
+func init() {
+	db.Register(&Device{})
+}
 
 type Station struct {
 	Slave uint8 `json:"slave,omitempty"` //从站号
