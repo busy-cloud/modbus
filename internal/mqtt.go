@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-const protocol = "modbus"
+const protocol = "modbus-rtu"
 
 func Startup() error {
 
@@ -15,10 +15,9 @@ func Startup() error {
 		ss := strings.Split(topic, "/")
 		linker := ss[1]
 		incoming := ss[2]
-		master, err := EnsureMaster(linker, incoming)
-		if err != nil {
-			log.Error("master err:", err)
-			return
+		master := GetMaster(linker, incoming)
+		if master != nil {
+			master.onData(payload)
 		}
 		master.onData(payload)
 	})
@@ -26,43 +25,31 @@ func Startup() error {
 	mqtt.Subscribe(protocol+"/+/up", func(topic string, payload []byte) {
 		ss := strings.Split(topic, "/")
 		linker := ss[1]
-		master, err := EnsureMaster(linker, "")
-		if err != nil {
-			log.Error("master err:", err)
-			return
+		master := GetMaster(linker, "")
+		if master != nil {
+			master.onData(payload)
 		}
-		master.onData(payload)
 	})
 
 	//连接打开，加载设备
-	mqtt.Subscribe(protocol+"/+/+/open", func(topic string, payload []byte) {
+	mqtt.SubscribeStruct[Options](protocol+"/+/+/open", func(topic string, options *Options) {
 		ss := strings.Split(topic, "/")
 		linker := ss[1]
 		incoming := ss[2]
-		master, err := EnsureMaster(linker, incoming)
+		_, err := CreateMaster(linker, incoming, options)
 		if err != nil {
 			log.Error("master err:", err)
 			return
-		}
-		err = master.Open()
-		//log.Println("master open", master.Id)
-		if err != nil {
-			log.Println(err)
 		}
 	})
 
-	mqtt.Subscribe(protocol+"/+/open", func(topic string, payload []byte) {
+	mqtt.SubscribeStruct(protocol+"/+/open", func(topic string, options *Options) {
 		ss := strings.Split(topic, "/")
 		linker := ss[1]
-		master, err := EnsureMaster(linker, "")
+		_, err := CreateMaster(linker, "", options)
 		if err != nil {
 			log.Error("master err:", err)
 			return
-		}
-		err = master.Open()
-		//log.Println("master open", master.Id)
-		if err != nil {
-			log.Println(err)
 		}
 	})
 
@@ -71,7 +58,7 @@ func Startup() error {
 		ss := strings.Split(topic, "/")
 		linker := ss[1]
 		incoming := ss[2]
-		master := GetMasterLinkerAndIncoming(linker, incoming)
+		master := GetMaster(linker, incoming)
 		if master != nil {
 			_ = master.Close()
 		}
@@ -80,7 +67,7 @@ func Startup() error {
 	mqtt.Subscribe(protocol+"/+/close", func(topic string, payload []byte) {
 		ss := strings.Split(topic, "/")
 		linker := ss[1]
-		master := GetMasterLinkerAndIncoming(linker, "")
+		master := GetMaster(linker, "")
 		if master != nil {
 			_ = master.Close()
 		}

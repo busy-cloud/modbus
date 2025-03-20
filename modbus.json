@@ -1,0 +1,39 @@
+{
+  "name": "modbus-rtu",
+  "description": "Modbus RTU",
+  "station": {
+    "fields": [
+      {
+        "key": "slave",
+        "type": "number",
+        "default": 1,
+        "min": 1,
+        "max": 255,
+        "step": 1
+      }
+    ]
+  },
+  "options": {
+    "fields": [
+      {
+        "key": "timeout",
+        "type": "number",
+        "default": 1000,
+        "min": 200,
+        "max": 5000,
+        "step": 100
+      },
+      {
+        "key": "polling",
+        "type": "boolean"
+      },
+      {
+        "key": "polling_interval",
+        "type": "number",
+        "default": 60,
+        "min": 1,
+        "step": 1
+      }
+    ]
+  }
+}
