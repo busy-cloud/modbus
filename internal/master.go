@@ -30,10 +30,6 @@ type ModbusMaster struct {
 	lock sync.Mutex
 }
 
-func (m *ModbusMaster) ID() string {
-	return CombineId(m.LinkerId, m.IncomingId)
-}
-
 func (m *ModbusMaster) Write(slave, code uint8, offset uint16, value any) error {
 	buf := bytes.NewBuffer(nil)
 	buf.WriteByte(slave)
@@ -220,7 +216,11 @@ func (m *ModbusMaster) LoadDevices() error {
 	m.devices = make(map[string]*Device)
 
 	var devices []*Device
-	err := db.Engine().Where("linker_id=?", m.LinkerId).And("incoming_id", m.IncomingId).Find(&devices)
+	cond := db.Engine().Where("linker_id=?", m.LinkerId)
+	if m.IncomingId != "" {
+		cond.And("incoming_id=?", m.IncomingId)
+	}
+	err := cond.Find(&devices)
 	if err != nil {
 		return err
 	}
