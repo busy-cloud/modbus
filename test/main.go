@@ -6,7 +6,7 @@ import (
 	"github.com/busy-cloud/boat/log"
 	"github.com/busy-cloud/boat/web"
 	_ "github.com/busy-cloud/connector/boot"
-	_ "github.com/busy-cloud/modbus/boot"
+	_ "github.com/busy-cloud/modbus/internal"
 	"github.com/spf13/viper"
 	"os"
 	"os/signal"

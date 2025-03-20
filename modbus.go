@@ -4,8 +4,8 @@ import (
 	_ "embed"
 	"encoding/json"
 	"github.com/busy-cloud/boat/log"
-	_ "github.com/busy-cloud/connector/boot"
 	"github.com/busy-cloud/iot/protocol"
+	_ "github.com/busy-cloud/modbus/internal"
 )
 
 //go:embed modbus.json
