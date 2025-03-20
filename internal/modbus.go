@@ -1,6 +1,6 @@
 package internal
 
-type Modbus struct {
+type ModbusConfig struct {
 	Crontab  string    `json:"crontab,omitempty"`
 	Interval uint      `json:"interval,omitempty"`
 	Timeout  uint      `json:"timeout,omitempty"`

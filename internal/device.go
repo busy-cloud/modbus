@@ -25,7 +25,7 @@ type Device struct {
 
 	master *ModbusMaster
 
-	modbus *Modbus
+	config *ModbusConfig
 
 	jobs []*cron.Job
 }
@@ -36,7 +36,7 @@ func (d *Device) Open() (err error) {
 	//	return err
 	//}
 
-	err, d.modbus = product.LoadConfig[Modbus](d.ProductId, "modbus")
+	err, d.config = product.LoadConfig[ModbusConfig](d.ProductId, "modbus")
 	if err != nil {
 		return err
 	}
@@ -55,15 +55,15 @@ func (d *Device) Open() (err error) {
 	}
 
 	//添加计划任务
-	if d.modbus.Crontab != "" {
-		job, err := cron.Crontab(d.modbus.Crontab, fn)
+	if d.config.Crontab != "" {
+		job, err := cron.Crontab(d.config.Crontab, fn)
 		if err != nil {
 			return err
 		}
 		d.jobs = append(d.jobs, job)
 	}
-	if d.modbus.Interval > 0 {
-		job, err := cron.Interval(int64(d.modbus.Interval), fn)
+	if d.config.Interval > 0 {
+		job, err := cron.Interval(int64(d.config.Interval), fn)
 		if err != nil {
 			return err
 		}
@@ -90,18 +90,18 @@ func (d *Device) Close() error {
 }
 
 func (d *Device) Poll() (map[string]any, error) {
-	if d.modbus == nil || d.modbus.Pollers == nil {
+	if d.config == nil || d.config.Pollers == nil {
 		return nil, errors.New("pollers not exist")
 	}
 
 	values := map[string]any{}
-	for _, p := range d.modbus.Pollers {
+	for _, p := range d.config.Pollers {
 		buf, err := d.master.Read(d.Station.Slave, p.Code, p.Address, p.Length)
 		if err != nil {
 			return nil, err
 		}
 		//解析
-		err = p.Parse(d.modbus.Mapper, buf, values)
+		err = p.Parse(d.config.Mapper, buf, values)
 		if err != nil {
 			return nil, err
 		}
@@ -111,11 +111,11 @@ func (d *Device) Poll() (map[string]any, error) {
 }
 
 func (d *Device) Get(key string) (any, error) {
-	if d.modbus == nil || d.modbus.Mapper == nil {
+	if d.config == nil || d.config.Mapper == nil {
 		return nil, errors.New("mappers not exist")
 	}
 
-	pt, code, addr, size := d.modbus.Mapper.Lookup(key)
+	pt, code, addr, size := d.config.Mapper.Lookup(key)
 	if pt == nil {
 		return nil, errors.New("point not exist")
 	}
@@ -129,11 +129,11 @@ func (d *Device) Get(key string) (any, error) {
 }
 
 func (d *Device) Set(key string, value any) error {
-	if d.modbus == nil || d.modbus.Mapper == nil {
+	if d.config == nil || d.config.Mapper == nil {
 		return errors.New("mappers not exist")
 	}
 
-	pt, code, addr, _ := d.modbus.Mapper.Lookup(key)
+	pt, code, addr, _ := d.config.Mapper.Lookup(key)
 	if pt == nil {
 		return errors.New("point not exist")
 	}
