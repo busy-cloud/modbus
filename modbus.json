@@ -5,6 +5,7 @@
     "fields": [
       {
         "key": "slave",
+        "label": "从站号",
         "type": "number",
         "default": 1,
         "min": 1,
@@ -17,6 +18,7 @@
     "fields": [
       {
         "key": "timeout",
+        "label": "超时",
         "type": "number",
         "default": 1000,
         "min": 200,
@@ -25,11 +27,13 @@
       },
       {
         "key": "polling",
-        "type": "boolean"
+        "type": "switch",
+        "label": "开启轮询"
       },
       {
         "key": "polling_interval",
         "type": "number",
+        "label": "轮询间隔",
         "default": 60,
         "min": 1,
         "step": 1
