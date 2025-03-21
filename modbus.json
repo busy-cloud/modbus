@@ -124,6 +124,7 @@
                 "key": "type",
                 "label": "类型",
                 "type": "select",
+                "default": "uint16",
                 "options": [
                   {
                     "label": "int16",
@@ -162,7 +163,8 @@
               {
                 "key": "be",
                 "label": "大端模式",
-                "type": "switch"
+                "type": "switch",
+                "default": true
               },
               {
                 "key": "rate",
@@ -192,6 +194,7 @@
                 "key": "type",
                 "label": "类型",
                 "type": "select",
+                "default": "uint16",
                 "options": [
                   {
                     "label": "int16",
@@ -230,7 +233,8 @@
               {
                 "key": "be",
                 "label": "大端模式",
-                "type": "switch"
+                "type": "switch",
+                "default": true
               },
               {
                 "key": "rate",
