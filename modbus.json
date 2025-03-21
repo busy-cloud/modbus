@@ -251,6 +251,7 @@
       {
         "key": "pollers",
         "type": "table",
+        "label": "轮询器",
         "children": [
           {
             "key": "code",
