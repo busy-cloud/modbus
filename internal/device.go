@@ -56,20 +56,22 @@ func (d *Device) Open() (err error) {
 		}
 	}
 
-	//添加计划任务
-	if d.config.Crontab != "" {
-		job, err := cron.Crontab(d.config.Crontab, fn)
-		if err != nil {
-			return err
+	if !d.master.Polling {
+		//添加计划任务
+		if d.config.Crontab != "" {
+			job, err := cron.Crontab(d.config.Crontab, fn)
+			if err != nil {
+				return err
+			}
+			d.jobs = append(d.jobs, job)
 		}
-		d.jobs = append(d.jobs, job)
-	}
-	if d.config.Interval > 0 {
-		job, err := cron.Interval(int64(d.config.Interval), fn)
-		if err != nil {
-			return err
+		if d.config.Interval > 0 {
+			job, err := cron.Interval(int64(d.config.Interval), fn)
+			if err != nil {
+				return err
+			}
+			d.jobs = append(d.jobs, job)
 		}
-		d.jobs = append(d.jobs, job)
 	}
 
 	devices.Store(d.Id, d)

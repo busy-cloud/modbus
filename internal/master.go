@@ -234,10 +234,10 @@ func (m *ModbusMaster) LoadDevices() error {
 	for _, device := range devices {
 		m.devices[device.Id] = device
 		device.master = m
-		//err = device.Open()
-		//if err != nil {
-		//	log.Printf("failed to open device: %v", err)
-		//}
+		err = device.Open()
+		if err != nil {
+			log.Printf("failed to open device: %v", err)
+		}
 	}
 	return nil
 }
