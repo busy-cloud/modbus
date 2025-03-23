@@ -23,9 +23,6 @@ type Station struct {
 type Device struct {
 	device.Device `xorm:"extends"`
 
-	LinkerId   string `json:"linker_id,omitempty" xorm:"index"`
-	IncomingId string `json:"incoming_id,omitempty" xorm:"index"`
-
 	Station Station `json:"station,omitempty" xorm:"json"`
 
 	master *ModbusMaster
