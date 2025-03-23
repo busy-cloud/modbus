@@ -106,7 +106,7 @@ func WriteTo(linker, incoming string, data []byte) error {
 	if incoming != "" {
 		topic += "/" + incoming
 	}
-	topic += "/up"
+	topic += "/down"
 	tkn := mqtt.Publish(topic, data)
 	tkn.Wait()
 	return tkn.Error()

@@ -248,7 +248,7 @@ func (m *ModbusMaster) polling() {
 			values, err := device.Poll()
 			if err != nil {
 				log.Error(err)
-				return
+				continue
 			}
 			topic := fmt.Sprintf("device/%s/%s/property", device.ProductId, device.Id)
 			mqtt.Publish(topic, values)

@@ -6,6 +6,7 @@ import (
 	"github.com/busy-cloud/boat/log"
 	"github.com/busy-cloud/boat/web"
 	_ "github.com/busy-cloud/connector"
+	_ "github.com/busy-cloud/iot"
 	_ "github.com/busy-cloud/modbus"
 	"github.com/spf13/viper"
 	"os"
@@ -14,7 +15,9 @@ import (
 )
 
 func main() {
-	viper.SetConfigName("modbus")
+	//viper.SetConfigName("modbus")
+	//viper.SetConfigType("yaml")
+	viper.SetConfigFile("modbus.yaml")
 
 	//注册系统信号
 	sigs := make(chan os.Signal, 1)
