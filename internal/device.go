@@ -38,7 +38,7 @@ func (d *Device) Open() (err error) {
 	//	return err
 	//}
 
-	err, d.config = product.LoadConfig[ModbusConfig](d.ProductId, "modbus-rtu")
+	d.config, err = product.LoadConfig[ModbusConfig](d.ProductId, "modbus-rtu")
 	if err != nil {
 		return err
 	}

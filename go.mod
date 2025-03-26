@@ -3,9 +3,9 @@ module github.com/busy-cloud/modbus
 go 1.23.0
 
 require (
-	github.com/busy-cloud/boat v0.2.3
-	github.com/busy-cloud/connector v0.2.4
-	github.com/busy-cloud/iot v0.2.5
+	github.com/busy-cloud/boat v0.2.11
+	github.com/busy-cloud/connector v0.2.6
+	github.com/busy-cloud/iot v0.2.8
 	github.com/gin-gonic/gin v1.10.0
 	github.com/spf13/cast v1.7.1
 	github.com/spf13/viper v1.19.0
@@ -14,6 +14,7 @@ require (
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
+	github.com/PaesslerAG/gval v1.2.4 // indirect
 	github.com/bytedance/sonic v1.12.10 // indirect
 	github.com/bytedance/sonic/loader v0.2.3 // indirect
 	github.com/cloudwego/base64x v0.1.5 // indirect
@@ -58,6 +59,7 @@ require (
 	github.com/sagikazarmark/locafero v0.7.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/segmentio/ksuid v1.0.4 // indirect
+	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.12.0 // indirect
