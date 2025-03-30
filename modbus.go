@@ -8,7 +8,7 @@ import (
 	_ "github.com/busy-cloud/modbus/internal"
 )
 
-//go:embed modbus.json
+//go:embed manifest.json
 var manifest string
 
 func init() {

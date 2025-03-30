@@ -8,6 +8,7 @@ import (
 	"github.com/busy-cloud/boat/db"
 	"github.com/busy-cloud/boat/log"
 	"github.com/busy-cloud/boat/mqtt"
+	"github.com/busy-cloud/iot/bin"
 	"github.com/spf13/cast"
 	"sync"
 	"time"
@@ -28,10 +29,19 @@ type ModbusMaster struct {
 
 	wait chan []byte
 	lock sync.Mutex
+
+	//tcp自增ID
+	increment uint16
 }
 
 func (m *ModbusMaster) Write(slave, code uint8, offset uint16, value any) error {
 	buf := bytes.NewBuffer(nil)
+	if m.Tcp {
+		_ = binary.Write(buf, binary.BigEndian, m.increment)
+		m.increment++
+		_ = binary.Write(buf, binary.BigEndian, 0)
+		_ = binary.Write(buf, binary.BigEndian, 0)
+	}
 	buf.WriteByte(slave)
 	buf.WriteByte(code)
 	_ = binary.Write(buf, binary.BigEndian, offset)
@@ -52,30 +62,65 @@ func (m *ModbusMaster) Write(slave, code uint8, offset uint16, value any) error 
 		return fmt.Errorf("invalid code: %d", code)
 	}
 
-	_ = binary.Write(buf, binary.LittleEndian, CRC16(buf.Bytes()))
+	if !m.Tcp {
+		_ = binary.Write(buf, binary.LittleEndian, CRC16(buf.Bytes()))
+	}
 
 	//发送
 	_, err := m.ask(buf.Bytes(), buf.Len()) //写数据时，返回数据一样，长度也一样
+
+	//TODO 判断错误码
 
 	return err
 }
 
 func (m *ModbusMaster) Read(slave, code uint8, offset uint16, length uint16) ([]byte, error) {
 	buf := bytes.NewBuffer(nil)
+	if m.Tcp {
+		_ = binary.Write(buf, binary.BigEndian, m.increment)
+		m.increment++
+		_ = binary.Write(buf, binary.BigEndian, 0)
+		_ = binary.Write(buf, binary.BigEndian, 0)
+	}
 	buf.WriteByte(slave)
 	buf.WriteByte(code)
 	_ = binary.Write(buf, binary.BigEndian, offset)
 	_ = binary.Write(buf, binary.BigEndian, length)
-	_ = binary.Write(buf, binary.LittleEndian, CRC16(buf.Bytes()))
+	if !m.Tcp {
+		_ = binary.Write(buf, binary.LittleEndian, CRC16(buf.Bytes()))
+	}
+
+	want := 7
+	if m.Tcp {
+		want = 8
+	}
 
 	//发送
-	res, err := m.ask(buf.Bytes(), 7)
+	res, err := m.ask(buf.Bytes(), want)
 	if err != nil {
 		return nil, err
 	}
 
-	cnt := int(res[2]) //字节数
-	ln := 5 + cnt
+	ln := 0
+	if m.Tcp {
+		remain := bin.ParseUint16(res[4:])
+		ln = int(remain) + 4
+
+		//判断错误码
+		if res[7] > 0x80 {
+			return nil, fmt.Errorf("invalid code: %d", res[7])
+		}
+	} else {
+		//计算字节数
+		cnt := int(res[2])
+		ln = 5 + cnt
+
+		//判断错误码
+		if res[1] > 0x80 {
+			return nil, fmt.Errorf("invalid code: %d", res[1])
+		}
+	}
+
 	//长度不够，继续读
 	if len(res) < ln {
 		b, e := m.ask(nil, ln-len(res))
@@ -85,7 +130,11 @@ func (m *ModbusMaster) Read(slave, code uint8, offset uint16, length uint16) ([]
 		res = append(res, b...)
 	}
 
-	return res[3 : len(res)-2], nil //除去包头和crc校验码
+	if m.Tcp {
+		return res[9:], nil //去掉包头
+	} else {
+		return res[3 : len(res)-2], nil //除去包头和crc校验码
+	}
 }
 
 func (m *ModbusMaster) write(request []byte) error {

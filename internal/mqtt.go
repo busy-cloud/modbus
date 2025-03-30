@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-const protocol = "modbus-rtu"
+const protocol = "modbus"
 
 func Startup() error {
 

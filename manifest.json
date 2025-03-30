@@ -1,5 +1,5 @@
 {
-  "name": "modbus-rtu",
+  "name": "modbus",
   "description": "Modbus RTU",
   "station": {
     "fields": [
@@ -16,6 +16,11 @@
   },
   "options": {
     "fields": [
+      {
+        "key": "tcp",
+        "type": "switch",
+        "label": "TCP模式"
+      },
       {
         "key": "timeout",
         "label": "超时",
