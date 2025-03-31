@@ -6,9 +6,9 @@ import (
 )
 
 func init() {
-	api.Register("GET", "modbus-rtu/device/:id/poll", devicePoll)
-	api.Register("GET", "modbus-rtu/device/:id/get/:key", deviceGetValue)
-	api.Register("POST", "modbus-rtu/device/:id/set/:key", deviceSetValue)
+	api.Register("GET", "modbus/device/:id/poll", devicePoll)
+	api.Register("GET", "modbus/device/:id/get/:key", deviceGetValue)
+	api.Register("POST", "modbus/device/:id/set/:key", deviceSetValue)
 }
 
 func devicePoll(ctx *gin.Context) {
