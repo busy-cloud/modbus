@@ -1,6 +1,6 @@
 package internal
 
-import "github.com/busy-cloud/iot/product"
+import "github.com/god-jason/iot-master/product"
 
 type Mapper struct {
 	Coils            []*product.PointBit  `json:"coils,omitempty"`

@@ -8,7 +8,7 @@ import (
 	"github.com/busy-cloud/boat/db"
 	"github.com/busy-cloud/boat/log"
 	"github.com/busy-cloud/boat/mqtt"
-	"github.com/busy-cloud/iot/bin"
+	"github.com/god-jason/iot-master/bin"
 	"github.com/spf13/cast"
 	"sync"
 	"time"

@@ -7,8 +7,8 @@ import (
 	"github.com/busy-cloud/boat/db"
 	"github.com/busy-cloud/boat/log"
 	"github.com/busy-cloud/boat/mqtt"
-	"github.com/busy-cloud/iot/device"
-	"github.com/busy-cloud/iot/product"
+	"github.com/god-jason/iot-master/device"
+	"github.com/god-jason/iot-master/product"
 	"go.uber.org/multierr"
 )
 
