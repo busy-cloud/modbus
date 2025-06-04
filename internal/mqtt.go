@@ -19,7 +19,6 @@ func Startup() error {
 		if master != nil {
 			master.onData(payload)
 		}
-		master.onData(payload)
 	})
 
 	mqtt.Subscribe(protocol+"/+/up", func(topic string, payload []byte) {
