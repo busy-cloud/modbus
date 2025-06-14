@@ -11,11 +11,11 @@ type Manager struct {
 }
 
 func (m *Manager) Get(link_id string) protocol.Master {
-	return masters.Load(link_id)
+	return m.masters.Load(link_id)
 }
 
 func (m *Manager) Close(link_id string) error {
-	master := masters.Load(link_id)
+	master := m.masters.Load(link_id)
 	if master != nil {
 		return master.Close()
 	}
@@ -36,7 +36,7 @@ func (m *Manager) Create(linker, link_id string, options []byte, writer protocol
 	master.Options = &ops
 	master.writer = writer
 
-	old := masters.LoadAndStore(link_id, &master)
+	old := m.masters.LoadAndStore(link_id, &master)
 	if old != nil {
 		_ = old.Close()
 	}
