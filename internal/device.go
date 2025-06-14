@@ -1,15 +1,18 @@
 package internal
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/busy-cloud/boat/cron"
 	"github.com/busy-cloud/boat/db"
 	"github.com/busy-cloud/boat/log"
 	"github.com/busy-cloud/boat/mqtt"
+	"github.com/god-jason/iot-master/calc"
 	"github.com/god-jason/iot-master/device"
 	"github.com/god-jason/iot-master/product"
 	"go.uber.org/multierr"
+	"time"
 )
 
 func init() {
@@ -160,6 +163,31 @@ func (d *Device) Set(key string, value any) error {
 	err = d.master.Write(d.Station.Slave, code, addr, buf)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (d *Device) Action(operators []*Operator, args map[string]any) error {
+	for _, o := range operators {
+
+		expr, err := calc.Compile(o.Value)
+		if err != nil {
+			return err
+		}
+		val, err := expr.EvalFloat64(context.Background(), args)
+		if err != nil {
+			return err
+		}
+
+		if o.Delay > 0 {
+			time.Sleep(time.Second * time.Duration(o.Delay))
+		}
+
+		err = d.Set(o.Name, val)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

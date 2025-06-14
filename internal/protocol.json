@@ -1,6 +1,6 @@
 {
   "name": "modbus",
-  "description": "Modbus RTU",
+  "description": "Modbus",
   "station": [
     {
       "key": "slave",
@@ -16,7 +16,7 @@
     {
       "key": "tcp",
       "type": "switch",
-      "label": "TCP模式"
+      "label": "Modbus-TCP"
     },
     {
       "key": "timeout",
@@ -295,6 +295,48 @@
           "default": 1,
           "min": 1,
           "step": 1
+        }
+      ]
+    },
+    {
+      "key": "actions",
+      "type": "table",
+      "label": "响应",
+      "children": [
+        {
+          "key": "name",
+          "label": "变量",
+          "type": "text"
+        },
+        {
+          "key": "label",
+          "label": "显示",
+          "type": "text"
+        },
+        {
+          "key": "operators",
+          "type": "table",
+          "label": "操作",
+          "children": [
+            {
+              "key": "name",
+              "label": "变量",
+              "type": "text"
+            },
+            {
+              "key": "value",
+              "label": "赋值(表达式)",
+              "type": "string"
+            },
+            {
+              "key": "delay",
+              "label": "延时（秒）",
+              "type": "number",
+              "default": 0,
+              "min": 0,
+              "step": 1
+            }
+          ]
         }
       ]
     }

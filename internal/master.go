@@ -11,6 +11,7 @@ import (
 	"github.com/god-jason/iot-master/bin"
 	"github.com/god-jason/iot-master/protocol"
 	"github.com/spf13/cast"
+	"go.uber.org/multierr"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -333,4 +334,118 @@ func (m *ModbusMaster) polling() {
 			time.Sleep(time.Minute)
 		}
 	}
+}
+
+func (m *ModbusMaster) OnSync(request *protocol.SyncRequest) (*protocol.SyncResponse, error) {
+	dev, ok := m.devices[request.DeviceId]
+	if !ok {
+		return nil, fmt.Errorf("device %s not found", request.DeviceId)
+	}
+	values, err := dev.Poll()
+	if err != nil {
+		return nil, err
+	}
+	return &protocol.SyncResponse{
+		MsgId:    request.MsgId,
+		DeviceId: request.DeviceId,
+		Values:   values,
+	}, nil
+}
+
+func (m *ModbusMaster) OnRead(request *protocol.ReadRequest) (*protocol.ReadResponse, error) {
+	dev, ok := m.devices[request.DeviceId]
+	if !ok {
+		return nil, fmt.Errorf("device %s not found", request.DeviceId)
+	}
+
+	var e error
+	resp := &protocol.ReadResponse{
+		MsgId:    request.MsgId,
+		DeviceId: request.DeviceId,
+		Values:   make(map[string]any),
+	}
+
+	for _, point := range request.Points {
+		val, err := dev.Get(point)
+		if err != nil {
+			e = multierr.Append(e, err)
+			continue
+		}
+		resp.Values[point] = val
+	}
+
+	if e != nil {
+		if len(resp.Values) == 0 {
+			return nil, e
+		}
+		//有成功有失败
+		resp.Error = e.Error()
+	}
+
+	return resp, nil
+}
+
+func (m *ModbusMaster) OnWrite(request *protocol.WriteRequest) (*protocol.WriteResponse, error) {
+	dev, ok := m.devices[request.DeviceId]
+	if !ok {
+		return nil, fmt.Errorf("device %s not found", request.DeviceId)
+	}
+
+	var e error
+	resp := &protocol.WriteResponse{
+		MsgId:    request.MsgId,
+		DeviceId: request.DeviceId,
+		Result:   make(map[string]bool),
+	}
+
+	for point, value := range request.Values {
+		err := dev.Set(point, value)
+		if err != nil {
+			e = multierr.Append(e, err)
+			continue
+		}
+
+		resp.Result[point] = true
+	}
+
+	if e != nil {
+		if len(resp.Result) == 0 {
+			return nil, e
+		}
+		//有成功有失败
+		resp.Error = e.Error()
+	}
+
+	return resp, nil
+}
+
+func (m *ModbusMaster) OnAction(request *protocol.ActionRequest) (*protocol.ActionResponse, error) {
+	dev, ok := m.devices[request.DeviceId]
+	if !ok {
+		return nil, fmt.Errorf("device %s not found", request.DeviceId)
+	}
+
+	var action *Action
+	for _, a := range dev.config.Actions {
+		if a.Name == request.Action {
+			action = a
+			break
+		}
+	}
+
+	if action == nil {
+		return nil, fmt.Errorf("action %s not found", request.Action)
+	}
+
+	resp := &protocol.ActionResponse{
+		MsgId:    request.MsgId,
+		DeviceId: request.DeviceId,
+	}
+
+	err := dev.Action(action.Operators, request.Parameters)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
 }

@@ -10,8 +10,8 @@ github.com/busy-cloud/boat v0.5.2 h1:QUskZpuB6Fr8dPhTK3XM7avaDj2WoCS0CNzojfk9txc
 github.com/busy-cloud/boat v0.5.2/go.mod h1:pArkdISo2peFMtlA61Cex6tftBZ7cXDqfgd/UKZ1zIU=
 github.com/busy-cloud/boat-ui v0.5.1 h1:Zw8K/jPpzly7z7ni5OtzHCO/GztCPfCFKlo4JcedwOQ=
 github.com/busy-cloud/boat-ui v0.5.1/go.mod h1:t9DwLmJyjbPHcm+IKzC9qUE7futO0pLigI9HIPbkhg0=
-github.com/busy-cloud/tcp-server v0.0.8 h1:0qlfYu31XcsDx/bVgLCb1hDtpUhXW+cQNTpp5aVC6wY=
-github.com/busy-cloud/tcp-server v0.0.8/go.mod h1:OOirzSeZQkmYsQDoWaGz8j1h1BF+7VL9cnSS6YRMcKM=
+github.com/busy-cloud/tcp-server v0.0.10 h1:RoG0F77NYc89e3IG0DxocQh6cTBqE31D4DKdEd2wqZM=
+github.com/busy-cloud/tcp-server v0.0.10/go.mod h1:OOirzSeZQkmYsQDoWaGz8j1h1BF+7VL9cnSS6YRMcKM=
 github.com/bytedance/sonic v1.13.2 h1:8/H1FempDZqC4VqjptGo14QQlJx8VdZJegxs6wwfqpQ=
 github.com/bytedance/sonic v1.13.2/go.mod h1:o68xyaF9u2gvVBuGHPlUVCy+ZfmNNO5ETf1+KgkJhz4=
 github.com/bytedance/sonic/loader v0.1.1/go.mod h1:ncP89zfokxS5LZrJxl5z0UJcsk4M4yY2JpfqGeCtNLU=
@@ -60,8 +60,8 @@ github.com/go-viper/mapstructure/v2 v2.2.1 h1:ZAaOCxANMuZx5RCeg0mBdEZk7DZasvvZIx
 github.com/go-viper/mapstructure/v2 v2.2.1/go.mod h1:oJDH3BJKyqBA2TXFhDsKDGDTlndYOZ6rGS0BRZIxGhM=
 github.com/goccy/go-json v0.10.5 h1:Fq85nIqj+gXn/S5ahsiTlK3TmC85qgirsdTP/+DeaC4=
 github.com/goccy/go-json v0.10.5/go.mod h1:oq7eo15ShAhp70Anwd5lgX2pLfOS3QCiwU/PULtXL6M=
-github.com/god-jason/iot-master v0.1.0 h1:yC1NB18PYhLSeQ5uBPoTCcVlardJMN9OulW7IY9RGno=
-github.com/god-jason/iot-master v0.1.0/go.mod h1:g0CRE7skMssVVZwcic/DE+nE/i0Y4kbKqRE8P6FWyAc=
+github.com/god-jason/iot-master v0.1.1 h1:xeDNyGdPHjaX6Miurpu4in/GglYqaqO8fGeh3ZKgpkY=
+github.com/god-jason/iot-master v0.1.1/go.mod h1:oP/XXLb3spjxH0HU2EzN2bQdT04rpwf+dlAQsRtMlLE=
 github.com/golang-jwt/jwt/v5 v5.2.2 h1:Rl4B7itRWVtYIHFrSNd7vhTiz9UpLdi6gZhZ3wEeDy8=
 github.com/golang-jwt/jwt/v5 v5.2.2/go.mod h1:pqrtFR0X4osieyHYxtmOUWsAWrfe1Q5UVIyoH402zdk=
 github.com/golang/protobuf v1.2.0/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
@@ -148,8 +148,8 @@ github.com/sourcegraph/conc v0.3.0 h1:OQTbbt6P72L20UqAkXXuLOj79LfEanQ+YQFNpLA9yS
 github.com/sourcegraph/conc v0.3.0/go.mod h1:Sdozi7LEKbFPqYX2/J+iBAM6HpqSLTASQIKqDmF7Mt0=
 github.com/spf13/afero v1.14.0 h1:9tH6MapGnn/j0eb0yIXiLjERO8RB6xIVZRDCX7PtqWA=
 github.com/spf13/afero v1.14.0/go.mod h1:acJQ8t0ohCGuMN3O+Pv0V0hgMxNYDlvdk+VTfyZmbYo=
-github.com/spf13/cast v1.8.0 h1:gEN9K4b8Xws4EX0+a0reLmhq8moKn7ntRlQYgjPeCDk=
-github.com/spf13/cast v1.8.0/go.mod h1:ancEpBxwJDODSW/UG4rDrAqiKolqNNh2DX3mk86cAdo=
+github.com/spf13/cast v1.9.2 h1:SsGfm7M8QOFtEzumm7UZrZdLLquNdzFYfIbEXntcFbE=
+github.com/spf13/cast v1.9.2/go.mod h1:jNfB8QC9IA6ZuY2ZjDp0KtFO2LZZlg4S/7bzP6qqeHo=
 github.com/spf13/pflag v1.0.6 h1:jFzHGLGAlb3ruxLB8MhbI6A8+AQX/2eW4qeyNZXNp2o=
 github.com/spf13/pflag v1.0.6/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An2Bg=
 github.com/spf13/viper v1.20.1 h1:ZMi+z/lvLyPSCoNtFCpqjy0S4kPbirhpTMwl8BkW9X4=
