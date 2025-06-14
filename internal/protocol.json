@@ -287,7 +287,7 @@
     {
       "key": "actions",
       "type": "table",
-      "label": "响应",
+      "label": "动作",
       "children": [
         {
           "key": "name",

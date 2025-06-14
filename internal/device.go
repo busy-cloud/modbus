@@ -4,14 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/busy-cloud/boat/cron"
 	"github.com/busy-cloud/boat/db"
-	"github.com/busy-cloud/boat/log"
-	"github.com/busy-cloud/boat/mqtt"
 	"github.com/god-jason/iot-master/calc"
 	"github.com/god-jason/iot-master/device"
 	"github.com/god-jason/iot-master/product"
-	"go.uber.org/multierr"
 	"time"
 )
 
@@ -31,8 +27,6 @@ type Device struct {
 	master *ModbusMaster
 
 	config *ModbusConfig
-
-	jobs []*cron.Job
 }
 
 func (d *Device) Open() (err error) {
@@ -46,37 +40,6 @@ func (d *Device) Open() (err error) {
 		return err
 	}
 
-	fn := func() {
-		values, err := d.Poll()
-		if err != nil {
-			log.Error(err)
-			return
-		}
-
-		if len(values) > 0 {
-			topic := fmt.Sprintf("device/%s/%s/property", d.ProductId, d.Id)
-			mqtt.Publish(topic, values)
-		}
-	}
-
-	if !d.master.Polling {
-		//添加计划任务
-		if d.config.Crontab != "" {
-			job, err := cron.Crontab(d.config.Crontab, fn)
-			if err != nil {
-				return err
-			}
-			d.jobs = append(d.jobs, job)
-		}
-		if d.config.Interval > 0 {
-			job, err := cron.Interval(int64(d.config.Interval), fn)
-			if err != nil {
-				return err
-			}
-			d.jobs = append(d.jobs, job)
-		}
-	}
-
 	devices.Store(d.Id, d)
 
 	return nil
@@ -84,12 +47,6 @@ func (d *Device) Open() (err error) {
 
 func (d *Device) Close() error {
 	var err error
-	for _, job := range d.jobs {
-		e := job.Stop()
-		if e != nil {
-			err = multierr.Append(err, e)
-		}
-	}
 
 	devices.Delete(d.Id)
 
