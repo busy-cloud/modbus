@@ -23,8 +23,8 @@ func CreateMaster(linker, incoming string, options *Options) (*ModbusMaster, err
 
 	//从数据库加载
 	var master ModbusMaster
-	master.LinkerId = linker
-	master.IncomingId = incoming
+	master.Linker = linker
+	master.LinkId = incoming
 	master.Options = options
 
 	old := masters.LoadAndStore(id, &master)

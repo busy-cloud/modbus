@@ -9,6 +9,7 @@ import (
 	"github.com/busy-cloud/boat/log"
 	"github.com/busy-cloud/boat/mqtt"
 	"github.com/god-jason/iot-master/bin"
+	"github.com/god-jason/iot-master/protocol"
 	"github.com/spf13/cast"
 	"sync"
 	"time"
@@ -19,8 +20,9 @@ type ModbusMaster struct {
 	*Options
 
 	//Id         string
-	LinkerId   string
-	IncomingId string
+	Linker string
+	LinkId string
+	writer protocol.WriteLinkFunc
 
 	//packets chan *Packet
 	devices map[string]*Device
@@ -138,7 +140,7 @@ func (m *ModbusMaster) Read(slave, code uint8, offset uint16, length uint16) ([]
 }
 
 func (m *ModbusMaster) write(request []byte) error {
-	return WriteTo(m.LinkerId, m.IncomingId, request)
+	return m.writer(m.Linker, m.LinkId, request)
 }
 
 func (m *ModbusMaster) read() ([]byte, error) {
@@ -195,7 +197,8 @@ func (m *ModbusMaster) ask(request []byte, n int) ([]byte, error) {
 	return ret, nil
 }
 
-func (m *ModbusMaster) onData(buf []byte) {
+func (m *ModbusMaster) OnData(buf []byte) {
+	//TODO 此处应该判断是否有等待
 	m.wait <- buf
 }
 
@@ -272,9 +275,9 @@ func (m *ModbusMaster) LoadDevices() error {
 	m.devices = make(map[string]*Device)
 
 	var devices []*Device
-	cond := db.Engine().Where("linker_id=?", m.LinkerId)
-	if m.IncomingId != "" {
-		cond.And("incoming_id=?", m.IncomingId)
+	cond := db.Engine().Where("linker_id=?", m.Linker)
+	if m.LinkId != "" {
+		cond.And("incoming_id=?", m.LinkId)
 	}
 	err := cond.Find(&devices)
 	if err != nil {
