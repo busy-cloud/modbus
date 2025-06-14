@@ -12,6 +12,7 @@ import (
 	"github.com/god-jason/iot-master/protocol"
 	"github.com/spf13/cast"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -29,7 +30,10 @@ type ModbusMaster struct {
 
 	opened bool
 
-	wait chan []byte
+	wait    chan []byte
+	waiting atomic.Bool
+
+	//读写事务锁，避免重入
 	lock sync.Mutex
 
 	//tcp自增ID
@@ -144,6 +148,9 @@ func (m *ModbusMaster) write(request []byte) error {
 }
 
 func (m *ModbusMaster) read() ([]byte, error) {
+	m.waiting.Store(true)
+	defer m.waiting.Store(false)
+
 	select {
 	case buf := <-m.wait:
 		return buf, nil
@@ -198,8 +205,10 @@ func (m *ModbusMaster) ask(request []byte, n int) ([]byte, error) {
 }
 
 func (m *ModbusMaster) OnData(buf []byte) {
-	//TODO 此处应该判断是否有等待
-	m.wait <- buf
+	//此处判断是否有等待
+	if m.waiting.Load() {
+		m.wait <- buf
+	}
 }
 
 func (m *ModbusMaster) Close() error {
