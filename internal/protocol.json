@@ -1,6 +1,6 @@
 {
   "name": "modbus",
-  "description": "Modbus",
+  "description": "Modbus RTU/TCP",
   "station": [
     {
       "key": "slave",
@@ -42,20 +42,6 @@
     }
   ],
   "model": [
-    {
-      "key": "crontab",
-      "label": "定时",
-      "type": "text"
-    },
-    {
-      "key": "interval",
-      "label": "定时间隔s",
-      "type": "number",
-      "default": 60,
-      "min": 1,
-      "max": 36000,
-      "step": 1
-    },
     {
       "key": "timeout",
       "label": "超时 ms",
@@ -305,7 +291,7 @@
       "children": [
         {
           "key": "name",
-          "label": "变量",
+          "label": "名称",
           "type": "text"
         },
         {
@@ -326,7 +312,7 @@
             {
               "key": "value",
               "label": "赋值(表达式)",
-              "type": "string"
+              "type": "text"
             },
             {
               "key": "delay",
