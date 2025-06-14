@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/busy-cloud/boat/boot"
 	"github.com/busy-cloud/boat/log"
-	"github.com/busy-cloud/boat/web"
 	_ "github.com/busy-cloud/modbus/internal" //引入主程序
 	"github.com/spf13/viper"
 	"os"
@@ -21,7 +20,7 @@ func main() {
 		<-sigs
 
 		//关闭web，出发
-		_ = web.Shutdown()
+		os.Exit(0)
 	}()
 
 	//安全退出
@@ -34,9 +33,5 @@ func main() {
 		return
 	}
 
-	err = web.Serve()
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
+	select {}
 }
