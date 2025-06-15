@@ -220,6 +220,7 @@ func (m *ModbusMaster) Close() error {
 
 	for _, device := range m.devices {
 		_ = device.Close()
+		mqtt.Publish("device/"+device.Id+"/offline", nil)
 	}
 	m.devices = nil
 	close(m.wait)
@@ -285,11 +286,7 @@ func (m *ModbusMaster) LoadDevices() error {
 	m.devices = make(map[string]*Device)
 
 	var devices []*Device
-	cond := db.Engine().Where("linker_id=?", m.Linker)
-	if m.LinkId != "" {
-		cond.And("incoming_id=?", m.LinkId)
-	}
-	err := cond.Find(&devices)
+	err := db.Engine().Where("link_id=?", m.LinkId).Find(&devices)
 	if err != nil {
 		return err
 	}
@@ -300,6 +297,7 @@ func (m *ModbusMaster) LoadDevices() error {
 		if err != nil {
 			log.Printf("failed to open device: %v", err)
 		}
+		mqtt.Publish("device/"+device.Id+"/online", nil)
 	}
 	return nil
 }
@@ -319,7 +317,7 @@ func (m *ModbusMaster) polling() {
 				log.Error(err)
 				continue
 			}
-			topic := fmt.Sprintf("device/%s/%s/property", device.ProductId, device.Id)
+			topic := fmt.Sprintf("device/%s/values", device.Id)
 			mqtt.Publish(topic, values)
 			//})
 
