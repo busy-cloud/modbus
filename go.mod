@@ -6,7 +6,7 @@ require (
 	github.com/busy-cloud/boat v0.5.2
 	github.com/busy-cloud/tcp-client v0.0.2
 	github.com/goccy/go-json v0.10.5
-	github.com/god-jason/iot-master v0.1.20
+	github.com/god-jason/iot-master v0.2.1
 	github.com/spf13/cast v1.9.2
 	github.com/spf13/viper v1.20.1
 	go.uber.org/multierr v1.11.0

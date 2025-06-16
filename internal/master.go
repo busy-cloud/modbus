@@ -10,7 +10,6 @@ import (
 	"github.com/goccy/go-json"
 	"github.com/god-jason/iot-master/bin"
 	"github.com/god-jason/iot-master/protocol"
-	"github.com/spf13/cast"
 	"go.uber.org/multierr"
 	"sync"
 	"sync/atomic"
@@ -41,7 +40,7 @@ type ModbusMaster struct {
 	increment uint16
 }
 
-func (m *ModbusMaster) Write(slave, code uint8, offset uint16, value any) error {
+func (m *ModbusMaster) Write(slave, code uint8, offset uint16, value []byte) error {
 	buf := bytes.NewBuffer(nil)
 	if m.Tcp {
 		_ = binary.Write(buf, binary.BigEndian, m.increment)
@@ -52,23 +51,7 @@ func (m *ModbusMaster) Write(slave, code uint8, offset uint16, value any) error 
 	buf.WriteByte(slave)
 	buf.WriteByte(code)
 	_ = binary.Write(buf, binary.BigEndian, offset)
-	switch code {
-	case 5: //单个线圈
-		if cast.ToBool(value) {
-			buf.WriteByte(0xff)
-			buf.WriteByte(0x00)
-		} else {
-			buf.WriteByte(0x00)
-			buf.WriteByte(0x00)
-		}
-	//case 15: //多个线圈
-	case 6: //单个寄存器
-		_ = binary.Write(buf, binary.BigEndian, cast.ToUint16(value))
-	//case 16: //多个寄存器
-	default:
-		return fmt.Errorf("invalid code: %d", code)
-	}
-
+	buf.Write(value)
 	if !m.Tcp {
 		_ = binary.Write(buf, binary.LittleEndian, CRC16(buf.Bytes()))
 	}
