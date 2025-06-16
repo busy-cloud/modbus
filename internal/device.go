@@ -4,68 +4,37 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/busy-cloud/boat/db"
 	"github.com/god-jason/iot-master/calc"
-	"github.com/god-jason/iot-master/device"
-	"github.com/god-jason/iot-master/product"
 	"time"
 )
-
-func init() {
-	db.Register(&Device{})
-}
 
 type Station struct {
 	Slave uint8 `json:"slave,omitempty"` //从站号
 }
 
 type Device struct {
-	device.Device `xorm:"extends"`
-
-	Station Station `json:"station,omitempty" xorm:"json"`
+	Id        string  `json:"id,omitempty" xorm:"pk"`
+	ProductId string  `json:"product_id,omitempty"`
+	Station   Station `json:"station,omitempty" xorm:"json"`
 
 	master *ModbusMaster
-
-	config *ModbusConfig
-}
-
-func (d *Device) Open() (err error) {
-	//err = json.Unmarshal([]byte(d.Station), &d.station)
-	//if err != nil {
-	//	return err
-	//}
-
-	d.config, err = product.LoadConfig[ModbusConfig](d.ProductId, "modbus")
-	if err != nil {
-		return err
-	}
-
-	devices.Store(d.Id, d)
-
-	return nil
-}
-
-func (d *Device) Close() error {
-	var err error
-
-	devices.Delete(d.Id)
-
-	return err
 }
 
 func (d *Device) Poll() (map[string]any, error) {
-	if d.config == nil || d.config.Pollers == nil {
+	config := configs.Load(d.ProductId)
+
+	if config == nil || config.Pollers == nil {
 		return nil, errors.New("pollers not exist")
 	}
 
 	values := map[string]any{}
-	for _, p := range d.config.Pollers {
+	for _, p := range config.Pollers {
 		buf, err := d.master.Read(d.Station.Slave, p.Code, p.Address, p.Length)
 		if err != nil {
 			return nil, err
 		}
 		//解析
-		err = p.Parse(d.config.Mapper, buf, values)
+		err = p.Parse(config.Mapper, buf, values)
 		if err != nil {
 			return nil, err
 		}
@@ -75,11 +44,13 @@ func (d *Device) Poll() (map[string]any, error) {
 }
 
 func (d *Device) Get(key string) (any, error) {
-	if d.config == nil || d.config.Mapper == nil {
+	config := configs.Load(d.ProductId)
+
+	if config == nil || config.Mapper == nil {
 		return nil, errors.New("mappers not exist")
 	}
 
-	pt, code, addr, size := d.config.Mapper.Lookup(key)
+	pt, code, addr, size := config.Mapper.Lookup(key)
 	if pt == nil {
 		return nil, errors.New("point not exist")
 	}
@@ -93,11 +64,13 @@ func (d *Device) Get(key string) (any, error) {
 }
 
 func (d *Device) Set(key string, value any) error {
-	if d.config == nil || d.config.Mapper == nil {
+	config := configs.Load(d.ProductId)
+
+	if config == nil || config.Mapper == nil {
 		return errors.New("mappers not exist")
 	}
 
-	pt, code, addr, _ := d.config.Mapper.Lookup(key)
+	pt, code, addr, _ := config.Mapper.Lookup(key)
 	if pt == nil {
 		return errors.New("point not exist")
 	}
@@ -125,9 +98,25 @@ func (d *Device) Set(key string, value any) error {
 	return nil
 }
 
-func (d *Device) Action(operators []*Operator, args map[string]any) error {
-	for _, o := range operators {
+func (d *Device) Action(name string, args map[string]any) error {
 
+	config := configs.Load(d.ProductId)
+	if config == nil || config.Actions == nil {
+		return errors.New("actions not exist")
+	}
+
+	var action *Action
+	for _, a := range config.Actions {
+		if a.Name == name {
+			action = a
+			break
+		}
+	}
+	if action == nil {
+		return errors.New("action not exist")
+	}
+
+	for _, o := range action.Operators {
 		expr, err := calc.Compile(o.Value)
 		if err != nil {
 			return err

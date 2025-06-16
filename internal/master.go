@@ -5,9 +5,9 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/busy-cloud/boat/db"
 	"github.com/busy-cloud/boat/log"
 	"github.com/busy-cloud/boat/mqtt"
+	"github.com/goccy/go-json"
 	"github.com/god-jason/iot-master/bin"
 	"github.com/god-jason/iot-master/protocol"
 	"github.com/spf13/cast"
@@ -218,10 +218,6 @@ func (m *ModbusMaster) Close() error {
 	}
 	m.opened = false
 
-	for _, device := range m.devices {
-		_ = device.Close()
-		mqtt.Publish("device/"+device.Id+"/offline", nil)
-	}
 	m.devices = nil
 	close(m.wait)
 
@@ -235,70 +231,12 @@ func (m *ModbusMaster) Open() error {
 
 	m.wait = make(chan []byte)
 
-	err := m.LoadDevices()
-	if err != nil {
-		return err
-	}
-
 	m.opened = true
 
 	if m.Polling {
 		go m.polling()
-	} else {
-		for _, d := range m.devices {
-			err := d.Open()
-			if err != nil {
-				log.Error(err)
-			}
-		}
 	}
 
-	return nil
-}
-
-func (m *ModbusMaster) LoadDevice(id string) error {
-	var device Device
-	has, err := db.Engine().ID(id).Get(&device)
-	if err != nil {
-		return err
-	}
-	if !has {
-		return fmt.Errorf("device %s not found", id)
-	}
-	m.devices[id] = &device
-	device.master = m
-	err = device.Open()
-	if err != nil {
-		log.Printf("failed to open device: %v", err)
-	}
-	return nil
-}
-
-func (m *ModbusMaster) UnLoadDevice(id string) {
-	if d, ok := m.devices[id]; ok {
-		_ = d.Close()
-		delete(m.devices, id)
-	}
-}
-
-func (m *ModbusMaster) LoadDevices() error {
-	//清空
-	m.devices = make(map[string]*Device)
-
-	var devices []*Device
-	err := db.Engine().Where("link_id=?", m.LinkId).Find(&devices)
-	if err != nil {
-		return err
-	}
-	for _, device := range devices {
-		m.devices[device.Id] = device
-		device.master = m
-		err = device.Open()
-		if err != nil {
-			log.Printf("failed to open device: %v", err)
-		}
-		mqtt.Publish("device/"+device.Id+"/online", nil)
-	}
 	return nil
 }
 
@@ -423,27 +361,41 @@ func (m *ModbusMaster) OnAction(request *protocol.ActionRequest) (*protocol.Acti
 		return nil, fmt.Errorf("device %s not found", request.DeviceId)
 	}
 
-	var action *Action
-	for _, a := range dev.config.Actions {
-		if a.Name == request.Action {
-			action = a
-			break
-		}
-	}
-
-	if action == nil {
-		return nil, fmt.Errorf("action %s not found", request.Action)
-	}
-
 	resp := &protocol.ActionResponse{
 		MsgId:    request.MsgId,
 		DeviceId: request.DeviceId,
 	}
 
-	err := dev.Action(action.Operators, request.Parameters)
+	err := dev.Action(request.Action, request.Parameters)
 	if err != nil {
 		return nil, err
 	}
 
 	return resp, nil
+}
+
+func (m *ModbusMaster) OnAttach(payload []byte) {
+	var devs []*Device
+	err := json.Unmarshal(payload, &devs)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	for _, dev := range devs {
+		dev.master = m
+		m.devices[dev.Id] = dev
+	}
+}
+
+func (m *ModbusMaster) OnDetach(payload []byte) {
+	var devs []string
+	err := json.Unmarshal(payload, &devs)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	for _, dev := range devs {
+		delete(m.devices, dev)
+	}
 }

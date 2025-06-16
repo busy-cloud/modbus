@@ -1,15 +1,17 @@
 package internal
 
-import "github.com/god-jason/iot-master/product"
+import (
+	"github.com/god-jason/iot-master/protocol"
+)
 
 type Mapper struct {
-	Coils            []*product.PointBit  `json:"coils,omitempty"`
-	DiscreteInputs   []*product.PointBit  `json:"discrete_inputs,omitempty"`
-	HoldingRegisters []*product.PointWord `json:"holding_registers,omitempty"`
-	InputRegisters   []*product.PointWord `json:"input_registers,omitempty"`
+	Coils            []*protocol.PointBit  `json:"coils,omitempty"`
+	DiscreteInputs   []*protocol.PointBit  `json:"discrete_inputs,omitempty"`
+	HoldingRegisters []*protocol.PointWord `json:"holding_registers,omitempty"`
+	InputRegisters   []*protocol.PointWord `json:"input_registers,omitempty"`
 }
 
-func (p *Mapper) Lookup(name string) (pt product.Point, code uint8, address uint16, size uint16) {
+func (p *Mapper) Lookup(name string) (pt protocol.Point, code uint8, address uint16, size uint16) {
 	for _, m := range p.Coils {
 		if m.Name == name {
 			return m, 1, m.Address, 1

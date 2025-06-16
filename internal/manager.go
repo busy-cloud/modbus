@@ -3,11 +3,23 @@ package internal
 import (
 	"encoding/json"
 	"github.com/busy-cloud/boat/lib"
+	"github.com/busy-cloud/boat/log"
 	"github.com/god-jason/iot-master/protocol"
 )
 
 type Manager struct {
 	masters lib.Map[ModbusMaster]
+}
+
+func (m *Manager) Config(product_id string, config []byte) {
+	var cfg ModbusConfig
+	err := json.Unmarshal(config, &cfg)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	configs.Store(product_id, &cfg)
 }
 
 func (m *Manager) Get(link_id string) protocol.Master {

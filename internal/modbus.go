@@ -1,5 +1,7 @@
 package internal
 
+import "github.com/busy-cloud/boat/lib"
+
 type ModbusConfig struct {
 	Timeout uint      `json:"timeout,omitempty"`
 	Mapper  *Mapper   `json:"mapper,omitempty"`
@@ -25,3 +27,5 @@ type Operator struct {
 	Value string `json:"value,omitempty"` //表达式
 	Delay int64  `json:"delay,omitempty"` //延时
 }
+
+var configs lib.Map[ModbusConfig]
