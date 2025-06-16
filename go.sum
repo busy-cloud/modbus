@@ -10,8 +10,8 @@ github.com/busy-cloud/boat v0.5.2 h1:QUskZpuB6Fr8dPhTK3XM7avaDj2WoCS0CNzojfk9txc
 github.com/busy-cloud/boat v0.5.2/go.mod h1:pArkdISo2peFMtlA61Cex6tftBZ7cXDqfgd/UKZ1zIU=
 github.com/busy-cloud/boat-ui v0.5.1 h1:Zw8K/jPpzly7z7ni5OtzHCO/GztCPfCFKlo4JcedwOQ=
 github.com/busy-cloud/boat-ui v0.5.1/go.mod h1:t9DwLmJyjbPHcm+IKzC9qUE7futO0pLigI9HIPbkhg0=
-github.com/busy-cloud/tcp-server v0.0.10 h1:RoG0F77NYc89e3IG0DxocQh6cTBqE31D4DKdEd2wqZM=
-github.com/busy-cloud/tcp-server v0.0.10/go.mod h1:OOirzSeZQkmYsQDoWaGz8j1h1BF+7VL9cnSS6YRMcKM=
+github.com/busy-cloud/tcp-client v0.0.2 h1:ozvncfSrtQoaklnMpxV8bxI4jD6TEctDSupoZcgSPTo=
+github.com/busy-cloud/tcp-client v0.0.2/go.mod h1:T81IvysuVrHRzA6L0MNKSqmKTJZXCltZbWWiBRkHXoQ=
 github.com/bytedance/sonic v1.13.2 h1:8/H1FempDZqC4VqjptGo14QQlJx8VdZJegxs6wwfqpQ=
 github.com/bytedance/sonic v1.13.2/go.mod h1:o68xyaF9u2gvVBuGHPlUVCy+ZfmNNO5ETf1+KgkJhz4=
 github.com/bytedance/sonic/loader v0.1.1/go.mod h1:ncP89zfokxS5LZrJxl5z0UJcsk4M4yY2JpfqGeCtNLU=

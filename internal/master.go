@@ -218,7 +218,7 @@ func (m *ModbusMaster) Close() error {
 	}
 	m.opened = false
 
-	m.devices = nil
+	//m.devices = nil
 	close(m.wait)
 
 	return nil
@@ -229,6 +229,7 @@ func (m *ModbusMaster) Open() error {
 		return fmt.Errorf("master is already opened")
 	}
 
+	m.devices = make(map[string]*Device)
 	m.wait = make(chan []byte)
 
 	m.opened = true

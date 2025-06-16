@@ -4,7 +4,7 @@ go 1.23.6
 
 require (
 	github.com/busy-cloud/boat v0.5.2
-	github.com/busy-cloud/tcp-server v0.0.10
+	github.com/busy-cloud/tcp-client v0.0.2
 	github.com/goccy/go-json v0.10.5
 	github.com/god-jason/iot-master v0.1.20
 	github.com/spf13/cast v1.9.2
