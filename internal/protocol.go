@@ -2,8 +2,8 @@ package internal
 
 import (
 	_ "embed"
-	"encoding/json"
 	"github.com/busy-cloud/boat/log"
+	"github.com/bytedance/sonic"
 	"github.com/god-jason/iot-master/protocol"
 )
 
@@ -12,7 +12,7 @@ var manifest []byte
 
 func init() {
 	var p protocol.Protocol
-	err := json.Unmarshal(manifest, &p)
+	err := sonic.Unmarshal(manifest, &p)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -1,9 +1,9 @@
 package internal
 
 import (
-	"encoding/json"
 	"github.com/busy-cloud/boat/lib"
 	"github.com/busy-cloud/boat/log"
+	"github.com/bytedance/sonic"
 	"github.com/god-jason/iot-master/protocol"
 )
 
@@ -13,7 +13,7 @@ type Manager struct {
 
 func (m *Manager) Config(product_id string, config []byte) {
 	var cfg ModbusConfig
-	err := json.Unmarshal(config, &cfg)
+	err := sonic.Unmarshal(config, &cfg)
 	if err != nil {
 		log.Error(err)
 		return
@@ -37,7 +37,7 @@ func (m *Manager) Close(link_id string) error {
 func (m *Manager) Create(linker, link_id string, options []byte, writer protocol.WriteLinkFunc) (protocol.Master, error) {
 
 	var ops Options
-	err := json.Unmarshal(options, &ops)
+	err := sonic.Unmarshal(options, &ops)
 	if err != nil {
 		return nil, err
 	}

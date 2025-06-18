@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/busy-cloud/boat/log"
 	"github.com/busy-cloud/boat/mqtt"
-	"github.com/goccy/go-json"
+	"github.com/bytedance/sonic"
 	"github.com/god-jason/iot-master/bin"
 	"github.com/god-jason/iot-master/protocol"
 	"go.uber.org/multierr"
@@ -360,7 +360,7 @@ func (m *ModbusMaster) OnAction(request *protocol.ActionRequest) (*protocol.Acti
 
 func (m *ModbusMaster) OnAttach(payload []byte) {
 	var devs []*Device
-	err := json.Unmarshal(payload, &devs)
+	err := sonic.Unmarshal(payload, &devs)
 	if err != nil {
 		log.Error(err)
 		return
@@ -374,7 +374,7 @@ func (m *ModbusMaster) OnAttach(payload []byte) {
 
 func (m *ModbusMaster) OnDetach(payload []byte) {
 	var devs []string
-	err := json.Unmarshal(payload, &devs)
+	err := sonic.Unmarshal(payload, &devs)
 	if err != nil {
 		log.Error(err)
 		return
