@@ -6,8 +6,8 @@ github.com/PaesslerAG/gval v1.2.4 h1:rhX7MpjJlcxYwL2eTTYIOBUyEKZ+A96T9vQySWkVUiU
 github.com/PaesslerAG/gval v1.2.4/go.mod h1:XRFLwvmkTEdYziLdaCeCa5ImcGVrfQbeNUbVR+C6xac=
 github.com/PaesslerAG/jsonpath v0.1.0 h1:gADYeifvlqK3R3i2cR5B4DGgxLXIPb3TRTH1mGi0jPI=
 github.com/PaesslerAG/jsonpath v0.1.0/go.mod h1:4BzmtoM/PI8fPO4aQGIusjGxGir2BzcV0grWtFzq1Y8=
-github.com/busy-cloud/boat v0.5.2 h1:QUskZpuB6Fr8dPhTK3XM7avaDj2WoCS0CNzojfk9txc=
-github.com/busy-cloud/boat v0.5.2/go.mod h1:pArkdISo2peFMtlA61Cex6tftBZ7cXDqfgd/UKZ1zIU=
+github.com/busy-cloud/boat v0.5.4 h1:3fH2mnCPkQh7MWZxvG5vN167JZN1Z8h8ZlKefr7bIM8=
+github.com/busy-cloud/boat v0.5.4/go.mod h1:a91gbwtQnLit5F8dN3VtnEZEZCaAMqquaLi84ce/jfw=
 github.com/busy-cloud/boat-ui v0.5.1 h1:Zw8K/jPpzly7z7ni5OtzHCO/GztCPfCFKlo4JcedwOQ=
 github.com/busy-cloud/boat-ui v0.5.1/go.mod h1:t9DwLmJyjbPHcm+IKzC9qUE7futO0pLigI9HIPbkhg0=
 github.com/busy-cloud/tcp-client v0.0.2 h1:ozvncfSrtQoaklnMpxV8bxI4jD6TEctDSupoZcgSPTo=
