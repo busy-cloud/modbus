@@ -3,9 +3,9 @@ package internal
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/busy-cloud/boat/json"
 	"github.com/busy-cloud/boat/log"
 	"github.com/busy-cloud/boat/mqtt"
 	"github.com/god-jason/iot-master/bin"

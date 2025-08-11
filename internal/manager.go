@@ -1,7 +1,7 @@
 package internal
 
 import (
-	"github.com/busy-cloud/boat/json"
+	"encoding/json"
 	"github.com/busy-cloud/boat/lib"
 	"github.com/busy-cloud/boat/log"
 	"github.com/god-jason/iot-master/protocol"
