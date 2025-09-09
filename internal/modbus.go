@@ -1,13 +1,19 @@
 package internal
 
-import "github.com/busy-cloud/boat/lib"
+import (
+	"github.com/busy-cloud/boat/lib"
+)
 
 type ModbusConfig struct {
-	Timeout uint      `json:"timeout,omitempty"`
-	Mapper  *Mapper   `json:"mapper,omitempty"`
-	Pollers []*Poller `json:"pollers,omitempty"`
-	Actions []*Action `json:"actions,omitempty"`
+	Timeout uint     `json:"timeout,omitempty"`
+	Mapper  Mapper   `json:"mapper,omitempty"`
+	Pollers []Poller `json:"pollers,omitempty"`
+	//Actions []*Action `json:"actions,omitempty"`
 }
+
+var configs lib.Map[ModbusConfig]
+
+//var models lib.Map[product.ProductModel]
 
 type Options struct {
 	Tcp             bool  `json:"tcp,omitempty"`              //TCP模式，默认RTU
@@ -27,5 +33,3 @@ type Operator struct {
 	Value string `json:"value,omitempty"` //表达式
 	Delay int64  `json:"delay,omitempty"` //延时
 }
-
-var configs lib.Map[ModbusConfig]
