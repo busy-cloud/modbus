@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	boot.Register("iot", &boot.Task{
+	boot.Register("modbus", &boot.Task{
 		Startup:  Startup,
 		Shutdown: nil,
 		Depends:  []string{"log", "mqtt", "iot"},
