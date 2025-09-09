@@ -3,19 +3,30 @@ package internal
 import (
 	_ "embed"
 	"encoding/json"
-	"github.com/busy-cloud/boat/log"
+	"github.com/busy-cloud/boat/boot"
 	"github.com/god-jason/iot-master/protocol"
 )
+
+func init() {
+	boot.Register("iot", &boot.Task{
+		Startup:  Startup,
+		Shutdown: nil,
+		Depends:  []string{"log", "mqtt", "iot"},
+	})
+}
 
 //go:embed protocol.json
 var manifest []byte
 
-func init() {
+func Startup() error {
+
 	var p protocol.Protocol
 	err := json.Unmarshal(manifest, &p)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	protocol.Create(&p, &Manager{})
+
+	return nil
 }
