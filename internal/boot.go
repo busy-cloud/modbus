@@ -3,6 +3,7 @@ package internal
 import (
 	_ "embed"
 	"encoding/json"
+
 	"github.com/busy-cloud/boat/boot"
 	"github.com/god-jason/iot-master/protocol"
 )

@@ -14,9 +14,9 @@ type Station struct {
 }
 
 type Device struct {
-	Id        string  `json:"id,omitempty" xorm:"pk"`
-	ProductId string  `json:"product_id,omitempty"`
-	Station   Station `json:"station,omitempty" xorm:"json"`
+	Id        string `json:"id,omitempty" xorm:"pk"`
+	ProductId string `json:"product_id,omitempty"`
+	Slave     uint8  `json:"slave,omitempty"` //从站号
 
 	master *ModbusMaster
 }
@@ -30,7 +30,7 @@ func (d *Device) Poll() (map[string]any, error) {
 
 	values := map[string]any{}
 	for _, p := range config.Pollers {
-		buf, err := d.master.Read(d.Station.Slave, p.Code, p.Address, p.Length)
+		buf, err := d.master.Read(d.Slave, p.Code, p.Address, p.Length)
 		if err != nil {
 			return nil, err
 		}
@@ -56,7 +56,7 @@ func (d *Device) Get(key string) (any, error) {
 		return nil, errors.New("point not exist")
 	}
 
-	buf, err := d.master.Read(d.Station.Slave, code, addr, size)
+	buf, err := d.master.Read(d.Slave, code, addr, size)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +91,7 @@ func (d *Device) Set(key string, value any) error {
 		return fmt.Errorf("invalid code %d", code)
 	}
 
-	err = d.master.Write(d.Station.Slave, code, addr, buf)
+	err = d.master.Write(d.Slave, code, addr, buf)
 	if err != nil {
 		return err
 	}

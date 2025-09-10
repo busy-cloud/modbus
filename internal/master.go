@@ -6,14 +6,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sync"
+	"sync/atomic"
+	"time"
+
 	"github.com/busy-cloud/boat/log"
 	"github.com/busy-cloud/boat/mqtt"
 	"github.com/god-jason/iot-master/bin"
 	"github.com/god-jason/iot-master/protocol"
 	"go.uber.org/multierr"
-	"sync"
-	"sync/atomic"
-	"time"
 )
 
 // ModbusMaster modbus主站

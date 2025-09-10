@@ -1,13 +1,14 @@
 package main
 
 import (
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/busy-cloud/boat/boot"
 	"github.com/busy-cloud/boat/log"
 	_ "github.com/busy-cloud/modbus" //引入主程序
 	"github.com/spf13/viper"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
 func main() {
