@@ -9,6 +9,7 @@ import (
 	"github.com/busy-cloud/boat/log"
 	"github.com/god-jason/iot-master/product"
 	"github.com/god-jason/iot-master/protocol"
+	"github.com/spf13/cast"
 )
 
 type Manager struct {
@@ -81,7 +82,7 @@ func (m *Manager) Model(product_id string, model *product.ProductModel) {
 	//解析地址点表
 	for _, property := range model.Properties {
 		for _, point := range property.Points {
-			switch point["register"] {
+			switch cast.ToInt(point["register"]) {
 			case 1:
 				p, err := parseStruct[protocol.PointBit](point)
 				if err != nil {
