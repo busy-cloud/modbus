@@ -5,10 +5,10 @@ import (
 )
 
 type ModbusConfig struct {
-	Timeout uint     `json:"timeout,omitempty"`
-	Mapper  Mapper   `json:"mapper,omitempty"`
-	Pollers []Poller `json:"pollers,omitempty"`
-	//Actions []*Action `json:"actions,omitempty"`
+	Timeout uint      `json:"timeout,omitempty"`
+	Mapper  Mapper    `json:"mapper,omitempty"`
+	Pollers []Poller  `json:"pollers,omitempty"`
+	Actions []*Action `json:"actions,omitempty"` //TODO 需要从物模型中整合
 }
 
 var configs lib.Map[ModbusConfig]

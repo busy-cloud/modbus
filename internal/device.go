@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/god-jason/iot-master/calc"
 	"time"
+
+	"github.com/god-jason/iot-master/calc"
 )
 
 type Station struct {
@@ -34,7 +35,7 @@ func (d *Device) Poll() (map[string]any, error) {
 			return nil, err
 		}
 		//解析
-		err = p.Parse(config.Mapper, buf, values)
+		err = p.Parse(&config.Mapper, buf, values)
 		if err != nil {
 			return nil, err
 		}
@@ -46,8 +47,8 @@ func (d *Device) Poll() (map[string]any, error) {
 func (d *Device) Get(key string) (any, error) {
 	config := configs.Load(d.ProductId)
 
-	if config == nil || config.Mapper == nil {
-		return nil, errors.New("mappers not exist")
+	if config == nil {
+		return nil, errors.New("model not exist")
 	}
 
 	pt, code, addr, size := config.Mapper.Lookup(key)
@@ -66,8 +67,8 @@ func (d *Device) Get(key string) (any, error) {
 func (d *Device) Set(key string, value any) error {
 	config := configs.Load(d.ProductId)
 
-	if config == nil || config.Mapper == nil {
-		return errors.New("mappers not exist")
+	if config == nil {
+		return errors.New("model not exist")
 	}
 
 	pt, code, addr, _ := config.Mapper.Lookup(key)
