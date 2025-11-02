@@ -104,6 +104,10 @@
   ],
   "point_extend_types": [
     {
+      "label": "bool",
+      "value": "bool"
+    },
+    {
       "label": "uint8",
       "value": "uint8"
     },
