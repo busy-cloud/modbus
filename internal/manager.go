@@ -123,60 +123,86 @@ func (m *Manager) Model(product_id string, model *product.ProductModel) {
 	slices.SortFunc(cfg.Mapper.HoldingRegisters, sortPointWord)
 	slices.SortFunc(cfg.Mapper.InputRegisters, sortPointWord)
 
+	//过滤掉只读点位
+	var coils []*protocol.PointBit
+	for _, v := range cfg.Mapper.Coils {
+		if v.Mode != "w" {
+			coils = append(coils, v)
+		}
+	}
+	var discreteInputs []*protocol.PointBit
+	for _, v := range cfg.Mapper.DiscreteInputs {
+		if v.Mode != "w" {
+			discreteInputs = append(discreteInputs, v)
+		}
+	}
+	var holdingRegisters []*protocol.PointWord
+	for _, v := range cfg.Mapper.HoldingRegisters {
+		if v.Mode != "w" {
+			holdingRegisters = append(holdingRegisters, v)
+		}
+	}
+	var inputRegisters []*protocol.PointWord
+	for _, V := range cfg.Mapper.InputRegisters {
+		if V.Mode != "w" {
+			inputRegisters = append(inputRegisters, V)
+		}
+	}
+
 	//形成轮询器
-	if len(cfg.Mapper.Coils) > 0 {
-		var begin = cfg.Mapper.Coils[0]
+	if len(coils) > 0 {
+		var begin = coils[0]
 		var last = begin
-		for i := 1; i < len(cfg.Mapper.Coils); i++ {
+		for i := 1; i < len(coils); i++ {
 			//出现间隔，就形成一条轮询
-			if cfg.Mapper.Coils[i].Address > last.Address+1 {
+			if coils[i].Address > last.Address+1 {
 				cfg.Pollers = append(cfg.Pollers, Poller{Code: 1, Address: begin.Address, Length: last.Address - begin.Address + 1})
-				begin = cfg.Mapper.Coils[i]
+				begin = coils[i]
 				last = begin
 			}
-			last = cfg.Mapper.Coils[i]
+			last = coils[i]
 		}
 		cfg.Pollers = append(cfg.Pollers, Poller{Code: 1, Address: begin.Address, Length: last.Address - begin.Address + 1})
 	}
-	if len(cfg.Mapper.DiscreteInputs) > 0 {
-		var begin = cfg.Mapper.DiscreteInputs[0]
+	if len(discreteInputs) > 0 {
+		var begin = discreteInputs[0]
 		var last = begin
-		for i := 1; i < len(cfg.Mapper.DiscreteInputs); i++ {
+		for i := 1; i < len(discreteInputs); i++ {
 			//出现间隔，就形成一条轮询
-			if cfg.Mapper.DiscreteInputs[i].Address > last.Address+1 {
+			if discreteInputs[i].Address > last.Address+1 {
 				cfg.Pollers = append(cfg.Pollers, Poller{Code: 2, Address: begin.Address, Length: last.Address - begin.Address + 1})
-				begin = cfg.Mapper.DiscreteInputs[i]
+				begin = discreteInputs[i]
 				last = begin
 			}
-			last = cfg.Mapper.DiscreteInputs[i]
+			last = discreteInputs[i]
 		}
 		cfg.Pollers = append(cfg.Pollers, Poller{Code: 2, Address: begin.Address, Length: last.Address - begin.Address + 1})
 	}
-	if len(cfg.Mapper.HoldingRegisters) > 0 {
-		var begin = cfg.Mapper.HoldingRegisters[0]
+	if len(holdingRegisters) > 0 {
+		var begin = holdingRegisters[0]
 		var last = begin
-		for i := 1; i < len(cfg.Mapper.HoldingRegisters); i++ {
+		for i := 1; i < len(holdingRegisters); i++ {
 			//出现间隔，就形成一条轮询
-			if cfg.Mapper.HoldingRegisters[i].Address > last.Address+1 {
+			if holdingRegisters[i].Address > last.Address+1 {
 				cfg.Pollers = append(cfg.Pollers, Poller{Code: 3, Address: begin.Address, Length: last.Address - begin.Address + uint16(last.Size())})
-				begin = cfg.Mapper.HoldingRegisters[i]
+				begin = holdingRegisters[i]
 				last = begin
 			}
-			last = cfg.Mapper.HoldingRegisters[i]
+			last = holdingRegisters[i]
 		}
 		cfg.Pollers = append(cfg.Pollers, Poller{Code: 3, Address: begin.Address, Length: last.Address - begin.Address + uint16(last.Size())})
 	}
-	if len(cfg.Mapper.InputRegisters) > 0 {
-		var begin = cfg.Mapper.InputRegisters[0]
+	if len(inputRegisters) > 0 {
+		var begin = inputRegisters[0]
 		var last = begin
-		for i := 1; i < len(cfg.Mapper.InputRegisters); i++ {
+		for i := 1; i < len(inputRegisters); i++ {
 			//出现间隔，就形成一条轮询
-			if cfg.Mapper.InputRegisters[i].Address > last.Address+1 {
+			if inputRegisters[i].Address > last.Address+1 {
 				cfg.Pollers = append(cfg.Pollers, Poller{Code: 4, Address: begin.Address, Length: last.Address - begin.Address + uint16(last.Size())})
-				begin = cfg.Mapper.InputRegisters[i]
+				begin = inputRegisters[i]
 				last = begin
 			}
-			last = cfg.Mapper.InputRegisters[i]
+			last = inputRegisters[i]
 		}
 		cfg.Pollers = append(cfg.Pollers, Poller{Code: 4, Address: begin.Address, Length: last.Address - begin.Address + uint16(last.Size())})
 	}
