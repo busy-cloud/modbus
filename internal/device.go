@@ -51,7 +51,7 @@ func (d *Device) Get(key string) (any, error) {
 		return nil, errors.New("model not exist")
 	}
 
-	pt, code, addr, size := config.Mapper.Lookup(key)
+	pt, code, addr, size := config.Mapper.LookupRead(key)
 	if pt == nil {
 		return nil, errors.New("point not exist")
 	}
@@ -71,7 +71,7 @@ func (d *Device) Set(key string, value any) error {
 		return errors.New("model not exist")
 	}
 
-	pt, code, addr, _ := config.Mapper.Lookup(key)
+	pt, code, addr, _ := config.Mapper.LookupWrite(key)
 	if pt == nil {
 		return errors.New("point not exist")
 	}

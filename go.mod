@@ -3,9 +3,9 @@ module github.com/busy-cloud/modbus
 go 1.24.0
 
 require (
-	github.com/busy-cloud/boat v0.6.19
-	github.com/busy-cloud/tcp-client v0.5.0
-	github.com/god-jason/iot-master v0.5.3
+	github.com/busy-cloud/boat v0.6.24
+	github.com/busy-cloud/tcp-client v0.5.4
+	github.com/god-jason/iot-master v0.5.13
 	github.com/spf13/cast v1.10.0
 	github.com/spf13/viper v1.21.0
 	go.uber.org/multierr v1.11.0
@@ -14,7 +14,7 @@ require (
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/PaesslerAG/gval v1.2.4 // indirect
-	github.com/busy-cloud/boat-ui v0.5.9 // indirect
+	github.com/busy-cloud/boat-ui v0.5.10 // indirect
 	github.com/bytedance/gopkg v0.1.3 // indirect
 	github.com/bytedance/sonic v1.14.1 // indirect
 	github.com/bytedance/sonic/loader v0.3.0 // indirect
