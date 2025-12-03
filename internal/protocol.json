@@ -84,10 +84,10 @@
     },
 
     {
-      "key": "be",
-      "label": "大端模式",
+      "key": "le",
+      "label": "小端模式",
       "type": "switch",
-      "default": true
+      "default": false
     },
     {
       "key": "rate",
